@@ -5,9 +5,9 @@ name: Build
 
 on:
   pull_request:
-    branches: [master]
+    branches: [main]
   push:
-    branches: [master]
+    branches: [main]
 
 jobs:
   test:
@@ -30,7 +30,7 @@ jobs:
       run: |
           python -m pip install --upgrade pip
           pip install pytest-cov
-          pip install '.[tests]'
+          pip install -e '.[tests]'
     - name: Run tests
       run: |
         pytest --cov=. test --cov-report=xml
