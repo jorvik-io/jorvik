@@ -34,7 +34,7 @@ To setup your machine:
 
 To create a Pull Request and submit code:
 - checkout main branch
-- take the latest changes from jorvik
+- take the latest changes from jorvik, see also [this article](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/working-with-forks/syncing-a-fork)
     ```bash
     git pull jorvik main
     ```
