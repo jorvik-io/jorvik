@@ -102,7 +102,7 @@ def test_exists(data: DataFrame, format: str):
     storage = BasicStorage()
 
     with TemporaryDirectory() as temp_dir:
-        storage.write(data, temp_dir, "delta", "overwrite")
+        storage.write(data, temp_dir, format, "overwrite")
         assert storage.exists(temp_dir)
 
     # Path no longer exists after exiting the context manager
