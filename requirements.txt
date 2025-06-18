@@ -1,4 +1,5 @@
 buildtools
+delta-spark
 pandas
 pyarrow
 pyspark

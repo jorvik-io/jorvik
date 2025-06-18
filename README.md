@@ -10,6 +10,13 @@ Setup the package in editable mode including the dependencies needed for testing
 ## Editor
 VS Code is the recommended editor and the project comes with the VScode settings that follow the project guidelines. See [.vscode/settings.json](.vscode/settings.json).
 
+Recommended extensions:
+- python
+- autopep8
+- Flake8
+- isort
+- Code Spell Checker
+
 ## Testing
 You can run the tests by running the command `pytest test`.
 
@@ -24,3 +31,6 @@ To ignore flake8 errors you can add the following comment in the affected code l
 
 ## Spell checks
 Sometimes spelling mistakes cannot be avoided. For example the spelling mistake is a function from a dependent library. you can ignore spelling mistakes by adding the comment `# cspell: words word1 word2` in the top of the file.  You can ignore the words by adding them in [cSpell.json](cspell.json).
+
+## Dev Container
+[Set up dev environment using Dev container in vscode](.devcontainer/setup_guide.md)
