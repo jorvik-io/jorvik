@@ -21,7 +21,8 @@ class BasicStorage():
             Returns:
                 DataFrame: The DataFrame containing the data.
         """
-        assert format in ["delta", "parquet", "json", "csv", "orc"], f"Unsupported format: {format}"
+        if format not in ["delta", "parquet", "json", "csv", "orc"]:
+            raise ValueError(f"Unsupported format: {format}")
         spark = SparkSession.getActiveSession()
 
         if format == "csv":
