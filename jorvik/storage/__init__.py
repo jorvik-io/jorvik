@@ -77,6 +77,16 @@ class Storage(Protocol):
         """
         ...
 
+    def exists(self, path: str) -> bool:
+        """ Check if the data exists in the storage.
+
+            Args:
+                path (str): The path to the data.
+            Returns:
+                bool: True if the data exists, False otherwise.
+        """
+        ...
+
 
 def configure() -> Storage:
     """ Configure the storage."""

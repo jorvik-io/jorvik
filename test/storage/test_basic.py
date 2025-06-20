@@ -1,19 +1,19 @@
 from tempfile import TemporaryDirectory
 
-from fixtures.spark import *  # noqa: F403 F401
 
-from pyspark.sql import DataFrame, SparkSession
+from pyspark.sql import DataFrame
 from pyspark.testing import assertDataFrameEqual
 import pytest
 
 from jorvik.storage.basic import BasicStorage
+from jorvik.pipelines.testing import spark, SparkSession  # noqa: F401
 
 
 # cSpell: words argvalues argnames
 
 
 @pytest.fixture
-def data(spark: SparkSession) -> DataFrame:
+def data(spark: SparkSession) -> DataFrame:  # noqa: F811
     return spark.createDataFrame(
         [
             (1, "Alice", 1.0),
@@ -81,7 +81,7 @@ def test_mixed_formats(data: DataFrame):
             storage.read(temp_dir, "parquet")
 
 
-def test_exists_empty_folder(spark: SparkSession):
+def test_exists_empty_folder(spark: SparkSession):  # noqa: F811
     storage = BasicStorage()
 
     with TemporaryDirectory() as temp_dir:

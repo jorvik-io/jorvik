@@ -42,12 +42,14 @@ class BasicStorage():
                     - delta
                     - parquet
                     - json
+                    - csv
                     - orc
                 options (dict): Additional options for reading.
             Returns:
                 DataFrame: The DataFrame containing the data.
         """
-        assert format in ["delta", "parquet", "json", "orc"], f"Unsupported format: {format}"
+        if format not in ["delta", "parquet", "json", "csv", "orc"]:
+            raise ValueError(f"Unsupported format: {format}")
         spark = SparkSession.getActiveSession()
 
         if format == "delta":
@@ -76,7 +78,8 @@ class BasicStorage():
                 partition_fields (str | list): The fields to partition by.
                 options (dict): Additional options for writing. Default is None.
         """
-        assert format in ["delta", "parquet", "json", "csv", "orc"], f"Unsupported format: {format}"
+        if format not in ["delta", "parquet", "json", "csv", "orc"]:
+            raise ValueError(f"Unsupported format: {format}")
 
         if format == "csv":
             return df.write.mode(mode).csv(path, header=True)
@@ -101,13 +104,15 @@ class BasicStorage():
                     - delta
                     - parquet
                     - json
+                    - csv
                     - orc
                 format (str): The format of the data.
                 checkpoint (str): The checkpoint location.
                 partition_fields (str | list): The fields to partition by.
                 options (dict): Additional options for writing. Default is None.
         """
-        assert format in ["delta", "parquet", "json", "orc"], f"Unsupported format: {format}"
+        if format not in ["delta", "parquet", "json", "csv", "orc"]:
+            raise ValueError(f"Unsupported format: {format}")
 
         writer = df.writeStream.format(format)
         if partition_fields:
