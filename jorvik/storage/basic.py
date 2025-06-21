@@ -24,13 +24,14 @@ class BasicStorage():
         if format not in ["delta", "parquet", "json", "csv", "orc"]:
             raise ValueError(f"Unsupported format: {format}")
         spark = SparkSession.getActiveSession()
+        options = {} if not options else options
 
         if format == "csv":
-            return spark.read.csv(path, header=True, inferSchema=True)
+            options.setdefault("header", True)
+            options.setdefault("inferSchema", True)
 
         reader = spark.read.format(format)
-        if options:
-            reader = reader.options(**options)
+        reader = reader.options(**options)
         return reader.load(path)
 
     def readStream(self, path: str, format: str, options: dict = None) -> DataFrame:
@@ -78,17 +79,18 @@ class BasicStorage():
         """
         assert format in ["delta", "parquet", "json", "csv", "orc"], f"Unsupported format: {format}"
 
+        options = {} if not options else options
         if format == "csv":
-            return df.write.mode(mode).csv(path, header=True)
+            options.setdefault("header", True)
+            options.setdefault("delimiter", ",")
 
         writer = df.write.format(format)
         if mode == "overwrite":
             writer = writer.option("overwriteSchema", "true")
         if partition_fields:
             writer = writer.partitionBy(partition_fields)
-        if options:
-            writer = writer.options(**options)
 
+        writer = writer.options(**options)
         writer.mode(mode).save(path)
 
     def writeStream(self, df: DataFrame, path: str, format: str, checkpoint: str,
