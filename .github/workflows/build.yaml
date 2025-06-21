@@ -33,4 +33,5 @@ jobs:
           pip install -e '.[tests]'
     - name: Run tests
       run: |
-        pytest --cov=. test --cov-report=xml
+        pytest --cov=. test -m 'not data_lineage' --cov-report=xml
+        pytest --cov=. test -m 'data_lineage' --cov-report=xml --cov-append

@@ -1,3 +1,4 @@
+from jorvik.storage.protocols import StorageOutputObserver
 from delta import DeltaTable
 from pyspark.sql import DataFrame, SparkSession
 from pyspark.sql.streaming import StreamingQuery
@@ -5,6 +6,9 @@ from pyspark.errors import AnalysisException
 
 
 class BasicStorage():
+    def __init__(self):
+        """ Initialize the BasicStorage class. """
+        self.output_observers = []
 
     def read(self, path: str, format: str, options: dict = None) -> DataFrame:
         """ Read data from the storage.
@@ -95,6 +99,7 @@ class BasicStorage():
 
         writer = writer.options(**options)
         writer.mode(mode).save(path)
+        self.notify_output_observers(df, path)
 
     def writeStream(self, df: DataFrame, path: str, format: str, checkpoint: str,
                     partition_fields: str | list = "", options: dict = None) -> StreamingQuery:
@@ -115,6 +120,8 @@ class BasicStorage():
         """
         if format not in ["delta", "parquet", "json", "csv", "orc"]:
             raise ValueError(f"Unsupported format: {format}")
+
+        self.notify_output_observers(df, path)
 
         writer = df.writeStream.format(format)
         if partition_fields:
@@ -157,3 +164,16 @@ class BasicStorage():
                 return False
             else:
                 raise e
+
+    def register_output_observer(self, observer: StorageOutputObserver) -> None:
+        """ Register an observer to be notified when a dataframe is written to a path.
+
+            Args:
+                observer (StorageOutputObserver): The observer to register.
+        """
+        self.output_observers.append(observer)
+
+    def notify_output_observers(self, df: DataFrame, output_path: str) -> None:
+        """ Notify all registered observers when a dataframe is written to a path. """
+        for observer in self.output_observers:
+            observer.update(df, output_path)
