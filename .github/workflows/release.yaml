@@ -20,7 +20,7 @@ jobs:
         pip install twine
     - name: Build package
       run: |
-        echo __version__ = "${{ github.event.release.tag_name }}" > jorvik/version.py
+        echo __version__ = '"${{ github.event.release.tag_name }}"' > jorvik/version.py
         python -m build
     - name: Publish package
       run: |
