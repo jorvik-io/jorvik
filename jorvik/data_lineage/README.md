@@ -8,7 +8,7 @@ To disable data lineage tracking for a specific write operation, pass the parame
 st = configure(track_lineage=False)
 ```
 
-You can use the data_lineage package on each own.
+You can use the data_lineage package on its own.
 
 ```python
 from jorvik.data_lineage import DataLineageLogger
