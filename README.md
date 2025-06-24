@@ -1,11 +1,12 @@
 # Jorvik
 Jorvik is a collection of utilities for creating and managing ETL pipeline in pyspark.
 
-# Packages
+## Packages
 - [Storage](jorvik/storage/README.md): Interact with the storage layer
 - [Pipelines](jorvik/pipelines/README.md): Build and test etl pipelines with ease
+- [Data Lineage](jorvik/data_lineage/README.md): Track data lineage
 
-# Contribute
+## Contribute
 The Jorvik project welcomes your expertise and enthusiasm!
 
 Writing code isn’t the only way to contribute. You can also:
