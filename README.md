@@ -14,10 +14,14 @@ Writing code isn’t the only way to contribute. You can also:
 
 See [How to Contribute](how_to_contribute.md) for instructions on setting up your local machine and opening your first Pull Request.
 
-## Installation
-Jorvik is available in Pypi and can be installed through pip.
-
 ## Getting Started.
+Jorvik is available in Pypi and can be installed with pip
+
+```bash
+pip install jorvik
+```
+
+Packages:
 - [Storage](jorvik/storage/README.md): Interact with the storage layer
 - [Pipelines](jorvik/pipelines/README.md): Build and test etl pipelines with ease
 - [Data Lineage](jorvik/data_lineage/README.md): Track data lineage
