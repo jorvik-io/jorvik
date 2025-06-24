@@ -7,5 +7,5 @@ Storage = storage.Storage
 configure_storage = storage.configure
 
 
-__all__ = ['DataLineageLogger', 'configure_storage', 'Storage', 'etl', 'FileInput', 'FileOutput', 
-           'StreamFileInput', 'StreamFileOutput', 'Input', 'Output']
+__all__ = ['DataLineageLogger', 'configure_storage', 'Storage', 'etl', 'FileInput', 'FileOutput',
+           'StreamFileInput', 'StreamFileOutput', 'Input', 'Output', '__version__']
