@@ -13,4 +13,4 @@ st.write(df, "/new/path/to/table", format="parquet", mode="overwrite")
 ```
 
 ## Data lineage
-[Enable Data Lineage Tracking](../data_lineage/README.md)
+[Enable Data Lineage Tracking](https://github.com/jorvik-io/jorvik/blob/main/jorvik/data_lineage/README.md)

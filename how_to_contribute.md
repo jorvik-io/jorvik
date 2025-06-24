@@ -19,7 +19,7 @@ You will need your own copy of jorvik (aka fork) to work on the code. Clone the 
     You should expect to see 2 remote references origin that points to your account and jorvik that point to jorvik-io
 
 
-[Set up your machine](setup.md)
+[Set up your machine](https://github.com/jorvik-io/jorvik/blob/main/setup.md)
 
 
 ## Creating a Pull Request

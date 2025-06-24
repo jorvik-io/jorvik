@@ -1,6 +1,6 @@
 
 ## Editor
-VS Code is the recommended editor and the project comes with the VScode settings that follow the project guidelines. See [.vscode/settings.json](.vscode/settings.json).
+VS Code is the recommended editor and the project comes with the VScode settings that follow the project guidelines. See [.vscode/settings.json](https://github.com/jorvik-io/jorvik/blob/main/.vscode/settings.json).
 
 Recommended extensions:
 - python
@@ -11,7 +11,7 @@ Recommended extensions:
 
 ## Installing jorvik for development
 
-[Set up dev environment using Dev container in vscode](.devcontainer/setup_guide.md)
+[Set up dev environment using Dev container in vscode](https://github.com/jorvik-io/jorvik/blob/main/.devcontainer/setup_guide.md)
 
 Or
 
@@ -23,7 +23,7 @@ Setup the package in editable mode including the dependencies needed for testing
 `pip install -e '.[tests]'`
 
 ### Editor
-VS Code is the recommended editor and the project comes with the VScode settings that follow the project guidelines. See [.vscode/settings.json](.vscode/settings.json).
+VS Code is the recommended editor and the project comes with the VScode settings that follow the project guidelines. See [.vscode/settings.json](https://github.com/jorvik-io/jorvik/blob/main/.vscode/settings.json).
 
 Recommended extensions:
 - python
@@ -40,11 +40,11 @@ max line length: 127
 To ignore flake8 errors you can add the following comment in the affected code line `# noqa: ERRORCODE`.
 
 ## Checking spelling
-Sometimes spelling mistakes cannot be avoided. For example the spelling mistake is a function from a dependent library. you can ignore spelling mistakes by adding the comment `# cspell: words word1 word2` in the top of the file.  You can ignore the words by adding them in [cSpell.json](cspell.json).
+Sometimes spelling mistakes cannot be avoided. For example the spelling mistake is a function from a dependent library. you can ignore spelling mistakes by adding the comment `# cspell: words word1 word2` in the top of the file.  You can ignore the words by adding them in [cSpell.json](https://github.com/jorvik-io/jorvik/blob/main/cspell.json).
 
 ## Installing jorvik for development
 
-[Set up dev environment using Dev container in vscode](.devcontainer/setup_guide.md)
+[Set up dev environment using Dev container in vscode](https://github.com/jorvik-io/jorvik/blob/main/.devcontainer/setup_guide.md)
 
 Or
 
