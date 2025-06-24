@@ -11,3 +11,6 @@ df = st.read("/path/to/table/", format="delta")
 
 st.write(df, "/new/path/to/table", format="parquet", mode="overwrite")
 ```
+
+## Data lineage
+[Enable Data Lineage Tracking](../data_lineage/README.md)
