@@ -19,10 +19,18 @@ else:
 
 setuptools.setup(
     name='jorvik',
-    author="Jorvik",
+    author="https://github.com/jorvik-io",
     version=VERSION,
     description="A set of utilities for creating and managing ETL Pipelines with pyspark.",
+    keywords=[
+        "ETL",
+        "Pyspark",
+        "Data Engineering",
+        "Data Pipelines"
+    ],
     long_description=LONG_DESCRIPTION,
+    url="https://github.com/jorvik-io/jorvik",
+    license="Apache License 2.0",
     long_description_content_type="text/markdown",
     install_requires=REQUIRE,
     extras_require={'tests': ['pytest', 'flake8', 'pytest-mock', 'numpy<2.0.0']},
