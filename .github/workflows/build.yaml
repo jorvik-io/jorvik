@@ -35,3 +35,9 @@ jobs:
       run: |
         pytest --cov=. test -m 'not data_lineage' --cov-report=xml
         pytest --cov=. test -m 'data_lineage' --cov-report=xml --cov-append
+    - name: Upload coverage to Coveralls
+      if: github.ref == 'refs/heads/main'
+      uses: coverallsapp/github-action@v2
+      with:
+        format: cobertura
+        file: coverage.xml

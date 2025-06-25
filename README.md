@@ -1,5 +1,8 @@
 # Jorvik
-Jorvik is a collection of utilities for creating and managing ETL pipeline in pyspark. Build from Data Engineers for Data Engineers.
+[![Build](https://github.com/GiorgosPa/jorvik/actions/workflows/build.yaml/badge.svg)](https://github.com/GiorgosPa/jorvik/actions/workflows/build.yaml)
+[![Coverage Status](https://coveralls.io/repos/github/jorvik-io/jorvik/badge.svg?branch=main)](https://coveralls.io/github/jorvik-io/jorvik?branch=main)
+
+Jorvik is a collection of utilities for creating and managing ETL pipeline in Pyspark. Build from Data Engineers for Data Engineers.
 
 ## Contribute
 The Jorvik project welcomes your expertise and enthusiasm!
