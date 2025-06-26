@@ -15,7 +15,7 @@ Writing code isn’t the only way to contribute. You can also:
 - help us stay on top of new and old issues
 - develop tutorials, videos, presentations, and other educational materials
 
-See [How to Contribute](https://github.com/jorvik-io/jorvik/blob/main/how_to_contribute.md) for instructions on setting up your local machine and opening your first Pull Request.
+See [How to Contribute](https://github.com/jorvik-io/jorvik/blob/main/CONTRIBUTING.md) for instructions on setting up your local machine and opening your first Pull Request.
 
 ## Getting Started.
 Jorvik is available in Pypi and can be installed with pip
