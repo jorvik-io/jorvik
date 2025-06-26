@@ -3,56 +3,76 @@ from typing import Callable
 from pyspark.sql import DataFrame, SparkSession
 from pyspark.sql.streaming import StreamingQuery
 
-from jorvik.storage import Storage
-from jorvik.storage.basic import BasicStorage
+from . import Storage
 
-class IsolatedStorage:
+class IsolatedStorage(Storage):
     def __init__(self, storage: Storage, verbose: bool = False, isolation_provider: Callable = None):
         self.storage = storage
         self.verbose = verbose
         self.isolation_provider = isolation_provider
 
-    def _values_to_list(self, value: str) -> list:
-        """ Normalize any user input into a clean list of values. """
-        if isinstance(value, str):
-            return [item.strip() for item in value.split(",") if item.strip()]
-        else:
-            raise ValueError("Expected input to be a single or comma separated string")
+    def _get_isolation_context(self):
+
+        isolation = self.isolation_provider()
+
+        if not isolation or not isinstance(isolation, str):
+            raise ValueError("Isolation path name must be a non-empty string.")
+
+        if isolation.endswith('/') or isolation.endswith('\\'):
+            raise ValueError("Isolation path name must not end with '/' or '\\'.")
+
+        if '|' in isolation:
+            raise ValueError("Isolation path name must not contain '|'.")
+
+        return isolation
 
     def _configure_path(self, path: str) -> str:
         """Configure the path based on the isolation context (e.g., branch name)."""
         spark = SparkSession.getActiveSession()
 
-        isolation = self.isolation_provider().replace("/", "_") # branch name
-
         isolation_container = spark.conf.get("isolation_path")
-        prod_paths = self._values_to_list(spark.conf.get("prod_path"))
+        if not isolation_container.endswith("/"):
+            isolation_container = isolation_container + "/"
 
-        active_prod = [x for x in prod_paths if x in path]
+        isolation_context = self._get_isolation_context()
+        if not isolation_context.endswith("/"):
+            isolation_context = isolation_context + "/"
 
-        isolation_path = path.replace(*active_prod, isolation_container + "/" + isolation)
-        return isolation_path
+        return path.replace("/mnt", isolation_container + isolation_context)
+
+    def exists(self, path: str) -> bool:
+        """Check if the data exists in the isolated path"""
+        configured_path = self._configure_path(path)
+        return self.storage.exists(configured_path)
 
     def read(self, path, format=None, options=None):
         configured_path = self._configure_path(path)
-        if BasicStorage.exists(configured_path):
+
+        if self.exists(configured_path):
             path = configured_path
-        return self.storage.read(path, format=format, options=options)
+        return self.storage.read(path, format, options)
+
+    def readStream(self, path: str, format: str, options: dict = None) -> DataFrame:
+        configured_path = self._configure_path(path)
+
+        if self.exists(configured_path):
+            path = configured_path
+
+        return self.storage.readStream(configured_path, format, options)
 
     def read_production_data(self, path, format=None, options=None):
         return self.storage.read(path, format=format, options=options)
-    
-    def write(self, df: DataFrame, path: str=None, format: str=None, mode: str=None,
-            partition_fields: str | list = "", options: dict = None) -> None:
-        
+
+    def write(self, df: DataFrame, path: str = None, format: str = None, mode: str = None,
+              partition_fields: str | list = "", options: dict = None) -> None:
         configured_path = self._configure_path(path)
 
-        writer = df.write.format(format).mode(mode)
+        self.storage.write(df, configured_path, format, mode, partition_fields, options)
 
-        if options:
-            writer = writer.options(**options)
+    def writeStream(self, df: DataFrame, path: str, format: str, checkpoint: str,
+                    partition_fields: str | list = "", options: dict = None) -> StreamingQuery:
 
-        if partition_fields:
-            writer = writer.partitionBy(partition_fields)
+        configured_path = self._configure_path(path)
 
-        writer.save(configured_path)
+        result = self.storage.writeStream(df, configured_path, format, checkpoint, partition_fields, options)
+        return result
