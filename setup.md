@@ -1,14 +1,3 @@
-
-## Editor
-VS Code is the recommended editor and the project comes with the VScode settings that follow the project guidelines. See [.vscode/settings.json](https://github.com/jorvik-io/jorvik/blob/main/.vscode/settings.json).
-
-Recommended extensions:
-- python
-- autopep8
-- Flake8
-- isort
-- Code Spell Checker
-
 ## Installing jorvik for development
 
 [Set up dev environment using Dev container in vscode](https://github.com/jorvik-io/jorvik/blob/main/.devcontainer/setup_guide.md)
