@@ -46,13 +46,21 @@ class IsolatedStorage(Storage):
 
     def _configure_path(self, path: str) -> str:
         """
-        Configure the path based on the isolation context (e.g., branch name).
+        Configure the path based on the isolation context (e.g., branch name)
+        and the isolation container.
+
+        If the original path is "/mnt/prod/data/my_data", the isolation context is "branch1"
+        and the isolation container is "isolation/",
+        the returned path will be "/mnt/isolation/branch1/prod/data/my_data".
 
         Args:
             path (str): The original storage path.
 
         Returns:
             str: The isolated storage path.
+
+        Example:
+
         """
         spark = SparkSession.getActiveSession()
 
@@ -80,8 +88,8 @@ class IsolatedStorage(Storage):
         Returns:
             bool: True if the data exists, False otherwise.
         """
-        configured_path = self._configure_path(path)
-        return self.storage.exists(configured_path)
+        isolation_path = self._configure_path(path)
+        return self.storage.exists(isolation_path)
 
     def read(self, path, format=None, options=None):
         """
@@ -95,16 +103,17 @@ class IsolatedStorage(Storage):
         Returns:
             DataFrame: The DataFrame containing the data.
         """
-        configured_path = self._configure_path(path)
+        isolation_path = self._configure_path(path)
 
-        if self.exists(configured_path):
-            path = configured_path
+        if self.exists(isolation_path):
+            path = isolation_path
 
         return self.storage.read(path, format, options)
 
     def readStream(self, path: str, format: str, options: dict = None) -> DataFrame:
         """
-        Read streaming data from the isolated path.
+        Read streaming data from the isolated path if it exists.
+        Otherwise read from the original path.
 
         Args:
             path (str): The original storage path.
@@ -114,10 +123,10 @@ class IsolatedStorage(Storage):
         Returns:
             DataFrame: The streaming DataFrame.
         """
-        configured_path = self._configure_path(path)
+        isolation_path = self._configure_path(path)
 
-        if self.exists(configured_path):
-            path = configured_path
+        if self.exists(isolation_path):
+            path = isolation_path
 
         return self.storage.readStream(path, format, options)
 
@@ -148,9 +157,9 @@ class IsolatedStorage(Storage):
             partition_fields (str or list, optional): Partition fields.
             options (dict, optional): Additional options for writing.
         """
-        configured_path = self._configure_path(path)
+        isolation_path = self._configure_path(path)
 
-        self.storage.write(df, configured_path, format, mode, partition_fields, options)
+        self.storage.write(df, isolation_path, format, mode, partition_fields, options)
 
     def writeStream(self, df: DataFrame, path: str, format: str, checkpoint: str,
                     partition_fields: str | list = "", options: dict = None) -> StreamingQuery:
@@ -169,7 +178,7 @@ class IsolatedStorage(Storage):
             StreamingQuery: The streaming query object.
         """
 
-        configured_path = self._configure_path(path)
+        isolation_path = self._configure_path(path)
 
-        result = self.storage.writeStream(df, configured_path, format, checkpoint, partition_fields, options)
+        result = self.storage.writeStream(df, isolation_path, format, checkpoint, partition_fields, options)
         return result
