@@ -47,7 +47,7 @@ class IsolatedStorage(Storage):
 
         return isolation
 
-    def _configure_path(self, path: str) -> str:
+    def _configure_path(self, path: str, add_isolation: bool = True) -> str:
         """
         Configure the path based on the isolation context (e.g., branch name)
         and the isolation container.
@@ -79,7 +79,12 @@ class IsolatedStorage(Storage):
         if not isolation_context.endswith("/"):
             isolation_context = isolation_context + "/"
 
-        return path.replace("/mnt", isolation_container + isolation_context)
+        # If add_isolation is True, replace "/mnt" with the isolation container and context
+        if add_isolation:
+            return path.replace("/mnt", isolation_container + isolation_context)
+        else:
+            # If add_isolation is False, just remove the isolation container and context
+            return path.replace(isolation_container + isolation_context, "")
 
     def _verbose_print_last_updated(self, path: str) -> None:
         """
@@ -271,10 +276,12 @@ class IsolatedStorage(Storage):
         Returns:
             DataFrame: The DataFrame containing the data.
         """
-        if self.verbose:
-            self._verbose_output(path, "Reading")
+        configured_path = self._configure_path(path, add_isolation=False)
 
-        return self.storage.read(path, format=format, options=options)
+        if self.verbose:
+            self._verbose_output(configured_path, "Reading")
+
+        return self.storage.read(configured_path, format=format, options=options)
 
     def write(self, df: DataFrame, path: str = None, format: str = None, mode: str = None,
               partition_fields: str | list = "", options: dict = None) -> None:
