@@ -3,6 +3,7 @@
         "CICD",
         "jorvik",
         "noqa",
-        "pyspark"
+        "pyspark",
+        "isin"
     ]
 }
