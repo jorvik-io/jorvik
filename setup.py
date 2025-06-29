@@ -1,9 +1,6 @@
 import os
 import re
 import setuptools
-import os
-import re
-import setuptools
 
 with open("README.md", "r", encoding="utf-8") as fh:
     LONG_DESCRIPTION = fh.read()
@@ -22,7 +19,7 @@ else:
 
 setuptools.setup(
     name='jorvik',
-    author="Jorvik",
+    author="https://github.com/jorvik-io",
     version=VERSION,
     description="A set of utilities for creating and managing ETL Pipelines with pyspark.",
     keywords=[
@@ -38,6 +35,5 @@ setuptools.setup(
     install_requires=REQUIRE,
     extras_require={'tests': ['pytest', 'flake8', 'pytest-mock', 'numpy<2.0.0']},
     data_files=[('', ['requirements.txt'])],
-    packages=setuptools.find_packages(''),
     packages=setuptools.find_packages(''),
 )
