@@ -3,6 +3,13 @@ import json
 from typing import Any
 
 from pyspark.sql import SparkSession
+from pyspark.errors.exceptions.captured import SparkNoSuchElementException
+
+class DatabricksUtilsError(Exception):
+    """Custom exception for Databricks utility errors."""
+    def __init__(self):
+        message = "Could not determine the dbutils client configuration. Ensure you are running this code in a Databricks notebook environment."  # noqa: E501
+        super().__init__(message)
 
 
 def get_spark() -> SparkSession:
@@ -11,14 +18,21 @@ def get_spark() -> SparkSession:
 
 def get_dbutils() -> Any:
     spark = get_spark()
-    if spark.conf.get("spark.databricks.service.client.enabled") == "true":
+    try:
+        client_config = spark.conf.get("spark.databricks.service.client.enabled")
+    except SparkNoSuchElementException:
+        client_config = None
+
+    if client_config == "true":
         from pyspark.dbutils import DBUtils  # type:ignore
         return DBUtils.SparkServiceClientDBUtils(spark.sparkContext)
-    if spark.conf.get("spark.databricks.service.client.enabled") == "false":
+    elif client_config == "false":
         import IPython  # type: ignore
         return IPython.get_ipython().user_ns["dbutils"]  # type:ignore
+    else:
+        raise DatabricksUtilsError()
 
-def get_notebook_context():
+def get_notebook_context() -> dict:
     """ Gets the current notebook context
 
     Returns
@@ -29,3 +43,11 @@ def get_notebook_context():
     return json.loads(
         get_dbutils().notebook.entry_point.getDbutils().notebook().getContext().toJson()  # type:ignore
     )
+
+def get_current_user() -> str:
+    """ Gets the current Databricks user"""
+    return get_notebook_context()['tags']['user']
+
+def get_cluster_id() -> str:
+    """ Gets the current Databricks cluster ID"""
+    return get_notebook_context()['tags']['clusterId']
