@@ -1,4 +1,6 @@
 from typing import Protocol
+import re
+import os
 
 from pyspark.sql import DataFrame
 from pyspark.sql.streaming import StreamingQuery
@@ -6,6 +8,7 @@ from pyspark.sql import SparkSession
 
 from jorvik.storage.basic import BasicStorage
 from jorvik.data_lineage.observer import DataLineageLogger
+from jorvik.utils import databricks, git
 
 
 class Storage(Protocol):
@@ -89,6 +92,41 @@ class Storage(Protocol):
         """
         ...
 
+def sanitize_isolation_context(context: str) -> str:
+    """ Sanitize the isolation context to ensure it is a valid identifier.
+        Replace all non-alphanumeric characters and underscores with an underscore.
+
+                Args:
+            context (str): The isolation context to sanitize.
+        Returns:
+            str: The sanitized isolation context.
+    """
+    return re.sub(r'[^a-zA-Z0-9_]', '_', context)
+
+def get_isolation_context() -> str:
+    """ Get the isolation context for the current Spark session.
+
+        Returns:
+            str: The isolation context.
+    """
+    provider = SparkSession.getActiveSession().sparkContext.getConf().get("io.jorvik.storage.isolation_provider", "")
+
+    if provider == 'DATABRICKS_GIT_BRANCH':
+        context = databricks.get_active_branch()
+    elif provider == 'DATABRICKS_USER':
+        context = databricks.get_current_user()
+    elif provider == 'DATABRICKS_CLUSTER':
+        context = databricks.get_cluster_id()
+    elif provider == 'GIT_BRANCH':
+        context = git.get_current_git_branch()
+    elif provider == 'ENVIRONMENT_VARIABLE':
+        context = os.environ.get("JORVIK_ISOLATION_CONTEXT", "")
+    elif provider == 'SPARK_CONFIG':
+        context = SparkSession.getActiveSession().sparkContext.getConf().get("io.jorvik.storage.isolation_context", "")
+    else:
+        raise ValueError(f"Unknown isolation provider: {provider}. Supported providers are: 'DATABRICKS_GIT_BRANCH', 'DATABRICKS_USER', 'DATABRICKS_CLUSTER', 'GIT_BRANCH', 'ENVIRONMENT_VARIABLE', 'SPARK_CONFIG'.")  # noqa: E501
+
+    return sanitize_isolation_context(context)
 
 def configure(track_lineage: bool = True) -> Storage:
     """ Configure the storage.

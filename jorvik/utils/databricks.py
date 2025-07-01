@@ -44,6 +44,24 @@ def get_notebook_context() -> dict:
         get_dbutils().notebook.entry_point.getDbutils().notebook().getContext().toJson()  # type:ignore
     )
 
+def get_active_branch() -> str:
+    """ Gets the current active branch if applicable.
+    Prod workflow running from Workspace folder which is being handled with return of ''
+    in place of branch name. This won't trigger any isolation.
+
+    Returns
+    _______
+        str: active_branch or ''
+    """
+
+    context = get_notebook_context()
+
+    if "mlflowGitReference" not in context["extraContext"]:
+        return ""
+
+    branch = context["extraContext"]["mlflowGitReference"]
+    return branch
+
 def get_current_user() -> str:
     """ Gets the current Databricks user"""
     return get_notebook_context()['tags']['user']
