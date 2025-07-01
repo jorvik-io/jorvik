@@ -92,11 +92,11 @@ class Storage(Protocol):
         """
         ...
 
-def sanitize_isolation_context(context: str) -> str:
+def _sanitize_isolation_context(context: str) -> str:
     """ Sanitize the isolation context to ensure it is a valid identifier.
         Replace all non-alphanumeric characters and underscores with an underscore.
 
-                Args:
+        Args:
             context (str): The isolation context to sanitize.
         Returns:
             str: The sanitized isolation context.
@@ -126,7 +126,7 @@ def get_isolation_context() -> str:
     else:
         raise ValueError(f"Unknown isolation provider: {provider}. Supported providers are: 'DATABRICKS_GIT_BRANCH', 'DATABRICKS_USER', 'DATABRICKS_CLUSTER', 'GIT_BRANCH', 'ENVIRONMENT_VARIABLE', 'SPARK_CONFIG'.")  # noqa: E501
 
-    return sanitize_isolation_context(context)
+    return _sanitize_isolation_context(context)
 
 def configure(track_lineage: bool = True) -> Storage:
     """ Configure the storage.
