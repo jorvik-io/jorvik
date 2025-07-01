@@ -11,10 +11,8 @@ class DatabricksUtilsError(Exception):
         message = "Could not determine the dbutils client configuration. Ensure you are running this code in a Databricks notebook environment."  # noqa: E501
         super().__init__(message)
 
-
 def get_spark() -> SparkSession:
     return SparkSession.getActiveSession()
-
 
 def get_dbutils() -> Any:
     spark = get_spark()
