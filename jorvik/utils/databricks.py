@@ -45,9 +45,9 @@ def get_notebook_context() -> dict:
     )
 
 def get_active_branch() -> str:
-    """ Gets the current active branch if applicable.
-    Prod workflow running from Workspace folder which is being handled with return of ''
-    in place of branch name. This won't trigger any isolation.
+    """ Returns the current active Git branch, if applicable.
+        For production workflows running from a Workspace (non-Git) folder, an empty string
+        is returned instead of a branch name. This indicates that no isolation should be applied.
 
     Returns
     _______
