@@ -15,7 +15,7 @@ def get_current_git_branch() -> str:
         str: The name of the current Git branch.
 
     Raises:
-        RuntimeError: If not in a Git repository or unable to determine the current branch.
+        GitUtilsError: If not in a Git repository or unable to determine the current branch.
     """
 
     original_cwd = os.getcwd()
