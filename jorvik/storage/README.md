@@ -35,7 +35,7 @@ Jorvik uses the currently active local Git branch as the isolation context.
 5. `ENVIRONMENT_VARIABLE`  
 Jorvik uses the value of the environment variable `JORVIK_ISOLATION_CONTEXT` as the isolation context.  
 If the environment variable is not set, the context defaults to an empty string — meaning no isolation.
-6. `SPARK_CONFIG`
+6. `SPARK_CONFIG`  
 Jorvik uses the value of the Spark configuration key `io.jorvik.storage.isolation_context` as the isolation context.  
 If this key is not set, the isolation context defaults to an empty string — meaning no isolation.
 
