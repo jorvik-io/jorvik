@@ -89,7 +89,7 @@ class Storage(Protocol):
                 df (DataFrame): Dataframe containing incremental data.
                 path (str): path to Delta table.
                 merge_condition (str): condition to merge incremental to full data
-                    sample: 'full.id = incremental.id  AND full.timestamp > current_date() - INTERVAL 180 DAYS'
+                    sample: 'full.id = incremental.id'
                 merge_schemas (bool): if True it sets existing fields that are missing on the incremental data
                     and new fields that are missing from the full data to None.
                     Else it throws a ValueError if the schema has changed.
