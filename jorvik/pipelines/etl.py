@@ -94,6 +94,30 @@ class FileOutput(Output):
 
 
 @dataclass
+class MergeDeltaOutput(Output):
+    path: str
+    merge_condition: str
+    merge_schemas: bool = False
+    update_condition: str = None
+    insert_condition: str = None
+    schema: StructType = None
+
+    def __post_init__(self):
+        if self.schema is None:
+            warnings.warn(
+                "Missing schema definition. Specifying a schema increases a jobs cohesion and robustness.",
+                UserWarning,
+            )
+            return
+
+    def load(self, df: DataFrame):
+        """ Load data into a file. """
+        st = storage.configure()
+        st.merge(df, self.path, self.merge_condition, self.merge_schemas,
+                 self.update_condition, self.insert_condition)
+
+
+@dataclass
 class StreamFileOutput(Output):
     path: str
     format: str

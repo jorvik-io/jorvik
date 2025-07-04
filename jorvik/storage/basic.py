@@ -1,8 +1,10 @@
-from jorvik.storage.protocols import StorageOutputObserver
 from delta import DeltaTable
-from pyspark.sql import DataFrame, SparkSession
-from pyspark.sql.streaming import StreamingQuery
 from pyspark.errors import AnalysisException
+from pyspark.sql import DataFrame, SparkSession, functions as F
+from pyspark.sql.streaming import StreamingQuery
+
+from jorvik.audit import schemas
+from jorvik.storage.protocols import StorageOutputObserver
 
 
 class BasicStorage():
@@ -130,6 +132,90 @@ class BasicStorage():
             writer = writer.options(**options)
 
         return writer.option("checkpointLocation", checkpoint).start(path)
+
+    def merge(self, df: DataFrame, path: str, merge_condition: str, merge_schemas: bool = False,
+              update_condition: str = None, insert_condition: str = None) -> None:
+        """ Merge incremental data to full data. Only applicable for Delta tables.
+            (Full) delta table and given dataframe are aliased 'full' and 'incremental' respectively,
+            you will need to use these aliases in the merge condition.
+
+            Args:
+                df (DataFrame): Dataframe containing incremental data.
+                path (str): path to Delta table.
+                merge_condition (str): condition to merge incremental to full data
+                    sample: 'full.id = incremental.id  AND full.datepart > current_date() - INTERVAL 180 DAYS'
+                merge_schemas (bool): if True it sets existing fields that are missing on the incremental data
+                    and new fields that are missing from the full data to None.
+                    Else it throws a ValueError if the schema has changed.
+                    Defaults to False.
+                update_condition (str | bool): optional condition of the update. Defaults to None.
+                    If set to False it will ignore updates and only insert new records.
+                insert_condition (str): optional condition of the insert. Defaults to None.
+                    If set to False it will ignore inserts and only update existing records.
+            Raises:
+                ValueError: If there are missing or new fields in the incremental data and merge_schema is set to False.
+                ValueError: If the given path contains data and it is not a Delta table.
+                ValueError: If both insert_condition and update_condition are set to False.
+        """
+        if isinstance(update_condition, bool):
+            update_condition = str(update_condition).lower()
+
+        if isinstance(insert_condition, bool):
+            insert_condition = str(insert_condition).lower()
+
+        if insert_condition == update_condition == 'false':
+            raise ValueError("Both inserts and updates are ignored this operation will not have an effect.")
+
+        if not self.exists(path):
+            self.write(df, path, format='delta', mode='overwrite')
+            return
+
+        spark = SparkSession.getActiveSession()
+
+        if not DeltaTable.isDeltaTable(spark, path):
+            raise ValueError("The given path is not a Delta Table.")
+
+        df = self._merge_schema(df, path, merge_schemas)
+
+        delta_table_full = DeltaTable.forPath(spark, path)
+
+        (
+            delta_table_full.alias('full')
+                            .merge(df.alias('incremental'), merge_condition)
+                            .whenMatchedUpdateAll(update_condition)
+                            .whenNotMatchedInsertAll(insert_condition)
+                            .execute()
+        )
+
+        self.notify_output_observers(df, path)
+
+    def _merge_schema(self, df: DataFrame, path: str, merge_schemas: bool) -> tuple[DataFrame, DataFrame]:
+        current_table = self.read(path, format='delta')
+        if schemas.are_equal(df.schema, current_table.schema):
+            return df
+
+        current_table_fields_names = {f.name for f in current_table.schema}
+        new_fields_names = {f.name for f in df.schema}
+
+        new = [f for f in df.schema if f.name not in current_table_fields_names and f.name]
+        missing = [f for f in current_table.schema if f.name not in new_fields_names and f.name]
+
+        if not merge_schemas:
+            raise ValueError(f"""Incremental data have a different schema.
+                             New fields: {new}
+                             Missing fields: {missing}
+                             """)
+
+        for f in missing:
+            df = df.withColumn(f.name, F.lit(None).cast(f.dataType))
+
+        for f in new:
+            current_table = current_table.withColumn(f.name, F.lit(None).cast(f.dataType))
+
+        if new:
+            self.write(current_table, path, format='delta', mode='overwrite')
+
+        return df
 
     def exists(self, path: str) -> bool:
         """ Check if the path exists.
