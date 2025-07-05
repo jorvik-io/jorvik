@@ -89,5 +89,6 @@ def get_isolation_provider() -> Callable:
         provider = PROVIDERS[provider_config]
     except KeyError:
         raise ValueError(f"Unknown isolation provider: {provider_config}. Supported providers are: {list(PROVIDERS.keys())}.")  # noqa: E501
-    _validate_isolation_context(provider())
+    if provider_config != 'NO_ISOLATION':
+        _validate_isolation_context(provider())
     return provider
