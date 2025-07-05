@@ -1,6 +1,5 @@
 from typing import Protocol
 import os
-import tempfile
 
 from pyspark.sql import DataFrame
 from pyspark.sql.streaming import StreamingQuery
@@ -91,47 +90,6 @@ class Storage(Protocol):
                 bool: True if the data exists, False otherwise.
         """
         ...
-def _validate_isolation_context(context: str) -> None:
-    """ Validate the isolation context to ensure it is a valid directory name.
-        Raises ValueError if the context is not a valid identifier.
-
-        Args:
-            context (str): The isolation context to validate.
-        Raises:
-            ValueError: If the context is not a valid identifier.
-    """
-    try:
-        with tempfile.TemporaryDirectory() as tmp:
-            test_path = os.path.join(tmp, context)
-            os.mkdir(test_path)
-        return True
-    except (OSError, ValueError):
-        return ValueError(f"Invalid isolation context name {context}. This name is not accepted as a directory in the filesystem.")  # noqa: E501
-
-def get_isolation_context() -> str:
-    """ Get the isolation context for the current Spark session.
-
-        Returns:
-            str: The isolation context.
-    """
-    provider = SparkSession.getActiveSession().sparkContext.getConf().get("io.jorvik.storage.isolation_provider", "")
-
-    if provider == 'DATABRICKS_GIT_BRANCH':
-        context = databricks.get_active_branch()
-    elif provider == 'DATABRICKS_USER':
-        context = databricks.get_current_user()
-    elif provider == 'DATABRICKS_CLUSTER':
-        context = databricks.get_cluster_id()
-    elif provider == 'GIT_BRANCH':
-        context = git.get_current_git_branch()
-    elif provider == 'ENVIRONMENT_VARIABLE':
-        context = os.environ.get("JORVIK_ISOLATION_CONTEXT", "")
-    elif provider == 'SPARK_CONFIG':
-        context = SparkSession.getActiveSession().sparkContext.getConf().get("io.jorvik.storage.isolation_context", "")
-    else:
-        raise ValueError(f"Unknown isolation provider: {provider}. Supported providers are: 'DATABRICKS_GIT_BRANCH', 'DATABRICKS_USER', 'DATABRICKS_CLUSTER', 'GIT_BRANCH', 'ENVIRONMENT_VARIABLE', 'SPARK_CONFIG'.")  # noqa: E501
-
-    return context
 
 def configure(track_lineage: bool = True) -> Storage:
     """ Configure the storage.
