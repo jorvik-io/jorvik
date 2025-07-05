@@ -1,3 +1,5 @@
+"""This module provides functions to manage isolation contexts for Jorvik IsolatedStorage."""
+
 import os
 import tempfile
 from typing import Callable
