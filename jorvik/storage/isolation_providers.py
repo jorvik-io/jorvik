@@ -48,8 +48,13 @@ def get_isolation_context_from_env_var() -> str:
 
         Returns:
             str: The isolation context as a string.
+        Raises:
+            ValueError: If the environment variable 'JORVIK_ISOLATION_CONTEXT' is not set.
     """
-    return os.environ.get("JORVIK_ISOLATION_CONTEXT", "")
+    context = os.environ.get("JORVIK_ISOLATION_CONTEXT")
+    if context is None:
+        raise ValueError("Environment variable 'JORVIK_ISOLATION_CONTEXT' is not set.")
+    return context
 
 def get_isolation_context_from_spark_config() -> str:
     """ Get the isolation context from the Spark configuration.
