@@ -1,5 +1,4 @@
 from typing import Protocol
-import os
 
 from pyspark.sql import DataFrame
 from pyspark.sql.streaming import StreamingQuery
@@ -7,7 +6,6 @@ from pyspark.sql import SparkSession
 
 from jorvik.storage.basic import BasicStorage
 from jorvik.data_lineage.observer import DataLineageLogger
-from jorvik.utils import databricks, git
 
 
 class Storage(Protocol):
