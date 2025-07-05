@@ -84,8 +84,8 @@ class Storage(Protocol):
         """
         ...
 
-    def merge(self, df: DataFrame, path: str, merge_condition: str, merge_schemas: bool = False,
-              update_condition: str | bool = None, insert_condition: str | bool = None) -> None:
+    def merge(self, df: DataFrame, path: str, merge_condition: str, partition_fields: str | list = "",
+              merge_schemas: bool = False, update_condition: str | bool = None, insert_condition: str | bool = None) -> None:
         """ Merge incremental data to full data. Only applicable for Delta tables.
             (Full) delta table and given dataframe are aliased 'full' and 'incremental' respectively,
             you will need to use these aliases in the merge condition.
@@ -95,13 +95,14 @@ class Storage(Protocol):
                 path (str): path to Delta table.
                 merge_condition (str): condition to merge incremental to full data
                     sample: 'full.id = incremental.id'
+                partition_fields (str | list): The fields to partition by.
                 merge_schemas (bool): if True it sets existing fields that are missing on the incremental data
                     and new fields that are missing from the full data to None.
                     Else it throws a ValueError if the schema has changed.
                     Defaults to False.
                 update_condition (str | bool): optional condition of the update. Defaults to None.
                     If set to False it will ignore updates and only insert new records.
-                insert_condition (str): optional condition of the insert. Defaults to None.
+                insert_condition (str | bool): optional condition of the insert. Defaults to None.
                     If set to False it will ignore inserts and only update existing records.
             Raises:
                 ValueError: If there are missing or new fields in the incremental data and merge_schema is set to False.
