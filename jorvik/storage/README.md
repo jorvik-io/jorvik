@@ -21,12 +21,12 @@ The Isolation Provider determines how Jorvik establishes an isolation context to
 You configure the isolation provider by setting the Spark configuration key `io.jorvik.storage.isolation_provider` to one of the supported values.
 
 Supported values and their behaviors are described below:
-1. `NO_ISOLATION`
+1. `NO_ISOLATION`  
 When Spark configuration key `io.jorvik.storage.isolation_provider` is not set or set to this value, Jorvik will ignore all storage isolation.
 2. `DATABRICKS_GIT_BRANCH`  
 Jorvik uses the Git branch in Databricks as the isolation context. This applies to:
     - Interactive notebooks hosted in a Git folder
-    - Workflows where the source is a Git provider
+    - Workflows where code source is a Git provider
 3. `DATABRICKS_USER`  
 Jorvik uses the current Databricks username as the isolation context. Each user gets access to their own isolated environment.
 4. `DATABRICKS_CLUSTER`  
