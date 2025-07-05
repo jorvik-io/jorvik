@@ -214,7 +214,8 @@ class BasicStorage():
             current_table = current_table.withColumn(f.name, F.lit(None).cast(f.dataType))
 
         if new:
-            self.write(current_table, path, format='delta', mode='overwrite', options={"replaceWhere": "true"})
+            self.write(current_table, path, format='delta', mode='overwrite',
+                       options={"mergeSchema": "true", "replaceWhere": "true"})
 
         return df
 
