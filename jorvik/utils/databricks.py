@@ -15,6 +15,12 @@ def get_spark() -> SparkSession:
     return SparkSession.getActiveSession()
 
 def get_dbutils() -> Any:
+    """ Gets the Databricks dbutils client
+    Returns:
+        DBUtils: dbutils client
+    Raises:
+        DatabricksUtilsError: If the dbutils client configuration cannot be determined.
+    """
     spark = get_spark()
     try:
         client_config = spark.conf.get("spark.databricks.service.client.enabled")
@@ -33,8 +39,7 @@ def get_dbutils() -> Any:
 def get_notebook_context() -> dict:
     """ Gets the current notebook context
 
-    Returns
-    _______
+    Returns:
         dict: notebook context
     """
 
@@ -47,8 +52,7 @@ def get_active_branch() -> str:
         For production workflows running from a Workspace (non-Git) folder, an empty string
         is returned instead of a branch name. This indicates that no isolation should be applied.
 
-    Returns
-    _______
+    Returns:
         str: active_branch or ''
     """
 
