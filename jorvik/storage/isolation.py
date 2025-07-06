@@ -1,19 +1,20 @@
 from typing import Callable
 import datetime
+import re
 
 from pyspark.sql import DataFrame, SparkSession, functions as F
 from pyspark.sql.streaming import StreamingQuery
 
 from delta.tables import DeltaTable
 
-from . import Storage
+from jorvik.storage.basic import BasicStorage
 
-class IsolatedStorage(Storage):
+class IsolatedStorage():
     """
     A storage wrapper that isolates data operations based on a context (e.g., branch name).
     """
 
-    def __init__(self, storage: Storage, verbose: bool = False, isolation_provider: Callable = None):
+    def __init__(self, storage: BasicStorage, verbose: bool = False, isolation_provider: Callable = None):
         """
         Initialize IsolatedStorage.
 
@@ -26,115 +27,95 @@ class IsolatedStorage(Storage):
         self.verbose = verbose
         self.isolation_provider = isolation_provider
 
-    def _get_isolation_context(self):
+    def _create_isolation_path(self, path: str) -> str:
         """
-        Get the current isolation context (e.g., branch name).
-
-        Returns:
-            str: The isolation context.
-
-        Raises:
-            ValueError: If the isolation context is invalid.
-        """
-
-        isolation = self.isolation_provider()
-
-        if isolation.endswith('/') or isolation.endswith('\\'):
-            raise ValueError("Isolation path name must not end with '/' or '\\'.")
-
-        if '|' in isolation:
-            raise ValueError("Isolation path name must not contain '|'.")
-
-        return isolation
-
-    def _configure_path(self, path: str, add_isolation: bool = True) -> str:
-        """
-        Configure the path based on the isolation context (e.g., branch name)
-        and the isolation container.
-
-        If the original path is "/mnt/prod/data/my_data", the isolation context is "branch1"
-        and the isolation container is "isolation/",
-        the returned path will be "/mnt/isolation/branch1/prod/data/my_data".
+        Create the isolation path based on the provided path and isolation context.
 
         Args:
             path (str): The original storage path.
 
         Returns:
-            str: The isolated storage path.
-
-        Example:
-
+            str: The full isolation path.
         """
         spark = SparkSession.getActiveSession()
 
+        mount_point = spark.conf.get("mount_point")
+        if not mount_point:
+            mount_point = "/mnt/"
+
         isolation_container = spark.conf.get("isolation_path")
+        isolation_context = self.isolation_provider
 
         # Ensure the isolation container ends with a slash
         if not isolation_container.endswith("/"):
             isolation_container = isolation_container + "/"
 
-        isolation_context = self._get_isolation_context()
-
         # Ensure the isolation context ends with a slash
         if not isolation_context.endswith("/"):
             isolation_context = isolation_context + "/"
 
-        # If add_isolation is True, replace "/mnt" with the isolation container and context
-        if add_isolation:
-            return path.replace("/mnt", isolation_container + isolation_context)
-        else:
-            # If add_isolation is False, just remove the isolation container and context
-            return path.replace(isolation_container + isolation_context, "")
+        # Replace the mount point with the isolation container and context
+        full_isolation_path = path.replace(mount_point, mount_point + isolation_container + self.isolation_provider)
+        full_isolation_path = re.sub('/+', '/', full_isolation_path)  # Ensure single slashes
+
+        return full_isolation_path
+
+    def _remove_isolation_path(self, path: str) -> str:
+        """
+        Remove the isolation path from the provided path.
+
+        Args:
+            path (str): The original storage path.
+
+        Returns:
+            str: The path without the isolation context.
+        """
+        spark = SparkSession.getActiveSession()
+
+        isolation_container = spark.conf.get("isolation_path")
+
+        return path.replace(isolation_container + self.isolation_provider, "")
 
     def _verbose_print_last_updated(self, path: str) -> None:
         """
-        Prints a human-readable message indicating how long ago a Delta Lake table at the given path was last updated.
+        Prints a human-readable message indicating how long ago a Delta Lake table at the specified path was last updated.
 
-        This method inspects the Delta table's operation history to determine the most recent update time.
-        - For non-streaming tables, it considers the latest 'WRITE' or 'MERGE' operation.
-        - For streaming tables, it uses the timestamp of the latest operation.
+        This method examines the Delta table's operation history to determine the most recent update time:
+        - For batch tables, it considers the latest 'WRITE' or 'MERGE' operation.
+        - For streaming tables, it includes 'STREAMING' operations.
 
-        The output is printed to stdout, showing the elapsed time in days, hours, and minutes (for batch tables),
-        or in seconds (for streaming tables).
+        The elapsed time since the last update is printed in days, hours, and minutes for batch tables,
+        or in seconds for streaming tables.
 
         Args:
             path (str): The file system path to the Delta Lake table.
 
         Example output:
             Table was last updated: 2 days, 5 hours, 13 minutes ago.
-            Streaming table updated 42.7 seconds ago.
         """
         spark = SparkSession.getActiveSession()
 
         # Initialize DeltaTable object for the given path
         delta_table = DeltaTable.forPath(spark, path)
 
-        # Get the latest operation from the table history
-        latest_operation = delta_table.history().limit(1).select("operation").collect()[0][0]
+        update_ts = (
+            delta_table.history()
+            .filter(F.col("operation").isin(["WRITE", "MERGE", "STREAMING"]))
+            .limit(1)
+            .select(F.max(F.col("timestamp")).alias("latest_update"))
+            .collect()[0][0]
+        )
 
-        if "STREAMING" not in latest_operation:
-            # If the latest operation is not streaming, calculate max_date from WRITE/MERGE operations
-            max_date = (
-                delta_table.history()
-                .filter(F.col("operation").isin(["WRITE", "MERGE"]))
-                .select(F.max(F.col("timestamp")).alias("latest_update"))
-                .collect()[0][0]
-            )
+        if update_ts:
+            time_difference = datetime.datetime.now() - update_ts
+            total_seconds = time_difference.total_seconds()
+            days = time_difference.days
+            hours = (total_seconds // 3600) % 24
+            minutes = (total_seconds // 60) % 60
 
-            if max_date:
-                time_difference = datetime.datetime.now() - max_date
-                days = time_difference.days
-                total_seconds = time_difference.total_seconds()
-                hours = (total_seconds // 3600) % 24
-                minutes = (total_seconds // 60) % 60
-
-                print(f"Table was last updated: {days} days, {hours} hours, {minutes} minutes ago.\n")
-
+            print(f"Table was last updated: {days} days, {hours} hours, {minutes} minutes ago.\n")
         else:
-            # For streaming tables, calculate age based on stream_age
-            stream_ts = delta_table.history().limit(1).select("timestamp").collect()[0][0]
-            stream_age = round((datetime.datetime.now() - stream_ts).total_seconds(), 1)
-            print(f"Streaming table updated {stream_age} seconds ago.\n")
+            print("No WRITE, MERGE, or STREAMING operations found in Delta table history.\n")
 
     def _verbose_table_name(self, path: str) -> str:
         """
@@ -216,12 +197,12 @@ class IsolatedStorage(Storage):
         Returns:
             bool: True if the data exists, False otherwise.
         """
-        isolation_path = self._configure_path(path)
+        isolation_path = self._create_isolation_path(path)
         return self.storage.exists(isolation_path)
 
-    def read(self, path, format=None, options=None):
+    def read(self, path, format=None, options=None) -> DataFrame:
         """
-        Read data from the isolated path.
+        Read data from the given path. If an isolated path exists, read from there.
 
         Args:
             path (str): The original storage path.
@@ -231,7 +212,7 @@ class IsolatedStorage(Storage):
         Returns:
             DataFrame: The DataFrame containing the data.
         """
-        isolation_path = self._configure_path(path)
+        isolation_path = self._create_isolation_path(path)
 
         if self.exists(isolation_path):
             path = isolation_path
@@ -254,19 +235,21 @@ class IsolatedStorage(Storage):
         Returns:
             DataFrame: The streaming DataFrame.
         """
-        isolation_path = self._configure_path(path)
+        isolation_path = self._create_isolation_path(path)
 
         if self.exists(isolation_path):
-            path = isolation_path
+            path = re.sub('/+', '/', isolation_path)
 
         if self.verbose:
             self._verbose_output(path, "Reading")
 
         return self.storage.readStream(path, format, options)
 
-    def read_production_data(self, path, format=None, options=None):
+    def read_production_data(self, path, format=None, options=None) -> DataFrame:
         """
         Read data from the production (non-isolated) path.
+        This method reads data from the original path without considering isolation.
+        If isolation is provided in the path, it will be removed.
 
         Args:
             path (str): The storage path.
@@ -276,7 +259,7 @@ class IsolatedStorage(Storage):
         Returns:
             DataFrame: The DataFrame containing the data.
         """
-        configured_path = self._configure_path(path, add_isolation=False)
+        configured_path = self._remove_isolation_path(path)
 
         if self.verbose:
             self._verbose_output(configured_path, "Reading")
@@ -296,7 +279,7 @@ class IsolatedStorage(Storage):
             partition_fields (str or list, optional): Partition fields.
             options (dict, optional): Additional options for writing.
         """
-        isolation_path = self._configure_path(path)
+        isolation_path = self._create_isolation_path(path)
 
         if self.verbose:
             self._verbose_output(path, "Writing")
@@ -320,10 +303,9 @@ class IsolatedStorage(Storage):
             StreamingQuery: The streaming query object.
         """
 
-        isolation_path = self._configure_path(path)
+        isolation_path = self._create_isolation_path(path)
 
         if self.verbose:
             self._verbose_output(path, "Writing")
 
-        result = self.storage.writeStream(df, isolation_path, format, checkpoint, partition_fields, options)
-        return result
+        return self.storage.writeStream(df, isolation_path, format, checkpoint, partition_fields, options)
