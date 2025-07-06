@@ -1,9 +1,9 @@
 from jorvik.storage.isolation_providers import (_validate_isolation_context, get_spark_config,
-                                                get_isolation_context_from_env_var, get_isolation_context_from_spark_config,
-                                                get_no_isolation_context, get_isolation_provider)
+                                                get_isolation_provider)
 from unittest.mock import MagicMock, patch
 from pyspark.sql import SparkSession
 import pytest
+import os
 
 spark = SparkSession.builder.appName("spark_no_context").getOrCreate()  # Initialize Spark session without context
 
@@ -66,3 +66,37 @@ def test_validate_isolation_context_invalid():
     with pytest.raises(ValueError):
         _validate_isolation_context("/")
 
+@patch('jorvik.utils.databricks.get_active_branch')
+@patch('jorvik.utils.databricks.get_current_user')
+@patch('jorvik.utils.databricks.get_cluster_id')
+@patch('jorvik.utils.git.get_current_git_branch')
+def test_get_isolation_provider_success(mock_get_current_git_branch, mock_get_cluster_id, mock_get_current_user, mock_get_active_branch):  # noqa: E501
+    mock_get_current_git_branch.return_value = 'local_git_dev'
+    mock_get_cluster_id.return_value = 'cluster_12345'
+    mock_get_current_user.return_value = 'user@jorvik.com'
+    mock_get_active_branch.return_value = 'databricks_git_dev'
+    os.environ['JORVIK_ISOLATION_CONTEXT'] = 'env_var_isolation'
+    spark.conf.set("io.jorvik.storage.isolation_context", 'spark_config_isolation')
+
+    PROVIDER_CONTEXT = {
+        'NO_ISOLATION': '',
+        'DATABRICKS_GIT_BRANCH': 'databricks_git_dev',
+        'DATABRICKS_USER': 'user@jorvik.com',
+        'DATABRICKS_CLUSTER': 'cluster_12345',
+        'GIT_BRANCH': 'local_git_dev',
+        'ENVIRONMENT_VARIABLE': 'env_var_isolation',
+        'SPARK_CONFIG': 'spark_config_isolation'
+    }
+
+    for provider, context in PROVIDER_CONTEXT.items():
+        spark.conf.set("io.jorvik.storage.isolation_provider", provider)
+        provider = get_isolation_provider()
+        assert provider() == context
+
+def test_get_isolation_provider_env_var_not_set():
+    """ Test when isolation provider is ENVIRONMENT_VARIABLE
+        but environment variable JORVIK_ISOLATION_CONTEXT is not set."""
+    spark.conf.set("io.jorvik.storage.isolation_provider", 'ENVIRONMENT_VARIABLE')
+    os.environ.pop('JORVIK_ISOLATION_CONTEXT', None)  # Ensure the environment variable is not set
+    with pytest.raises(ValueError):
+        get_isolation_provider()
