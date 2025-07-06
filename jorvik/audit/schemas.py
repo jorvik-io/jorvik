@@ -26,6 +26,7 @@ def is_subset(schema: StructType, ref_schema: StructType) -> bool:
 
 def are_equal(schema1: StructType, schema2: StructType) -> bool:
     """ Compare two schemas to see if they are equal.
+    Ignores column ordering and whether the columns are Nullable.
 
     Args:
         schema1 (StructType): The first schema to compare.
