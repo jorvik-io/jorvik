@@ -105,3 +105,30 @@ def test_etl_with_incorrect_schemas_can_succeed(spark: SparkSession, incorrect_s
     st.write(second, "/tmp/simple_join/second", format="delta", mode="overwrite")
 
     incorrect_schema_skip_schema_verification.run()
+
+
+def test_etl_with_merge(spark: SparkSession, merge_delta):   # noqa: F811
+    """ The new row is added one row is updated and the missing row is kept. """
+    df = spark.createDataFrame([
+        {"id": 1, "value": "existing"},
+        {"id": 2, "value": "existing"},
+        {"id": 3, "value": "existing"},
+    ])
+
+    st = storage.configure()
+
+    st.write(df, "/tmp/merge/in_df", format="delta", mode="overwrite")
+    st.write(df, "/tmp/merge/out", format="delta", mode="overwrite")
+
+    merge_delta.run()
+
+    expected = spark.createDataFrame([
+        {"id": 1, "value": "existing"},
+        {"id": 2, "value": "existing"},
+        {"id": 3, "value": "updated"},
+        {"id": 4, "value": "added"}
+    ])
+
+    result = st.read("/tmp/merge/out", format="delta")
+
+    assertDataFrameEqual(result, expected)
