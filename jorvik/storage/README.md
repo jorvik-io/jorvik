@@ -43,7 +43,7 @@ If this key is not set, the isolation context defaults to an empty string — me
 
 Spark configurations `io.jorvik.storage.isolation_provider` and `io.jorvik.storage.isolation_context` can be set in either the Spark **context** (configured during Spark session initialization and not changeable at runtime) or the Spark **session** (changeable at runtime).
 
-If both the context and session define these configurations, the values from the Spark context take precedence.
+If both the context and session define these configurations, the values from the Spark **session** take precedence.
 
 ## Data lineage
 [Enable Data Lineage Tracking](https://github.com/jorvik-io/jorvik/blob/main/jorvik/data_lineage/README.md)
