@@ -55,7 +55,7 @@ class IsolatedStorage():
             isolation_context = isolation_context + "/"
 
         # Replace the mount point with the isolation container and context
-        full_isolation_path = path.replace(mount_point, mount_point + isolation_container + self.isolation_provider)
+        full_isolation_path = path.replace(mount_point, mount_point + isolation_container + isolation_context)
         full_isolation_path = re.sub('/+', '/', full_isolation_path)  # Ensure single slashes
 
         return full_isolation_path
