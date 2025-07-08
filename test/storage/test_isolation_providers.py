@@ -5,7 +5,10 @@ from pyspark.sql import SparkSession
 import pytest
 import os
 
-spark = SparkSession.builder.appName("spark_no_context").getOrCreate()  # Initialize Spark session without context
+@pytest.fixture(scope="module")
+def spark():
+    """ Fixture to provide a Spark session for testing. """
+    return SparkSession.builder.appName("spark_no_context").getOrCreate() 
 
 def mock_spark_session(mock_get_active_session, context_config: dict, session_config: dict):
     """ Helper function to mock SparkSession.getActiveSession() with given context and session configurations.
@@ -21,17 +24,17 @@ def mock_spark_session(mock_get_active_session, context_config: dict, session_co
     mock_session.conf = session_config
     mock_get_active_session.return_value = mock_session
 
-def test_get_spark_config_both_empty():
+def test_get_spark_config_both_empty(spark):
     ''' Test when a key is not set in neither Spark context nor session configurations'''
     with pytest.raises(ValueError):
         get_spark_config('io.jorvik.storage.isolation_provider')
 
-def test_get_spark_config_default_value():
+def test_get_spark_config_default_value(spark):
     ''' Test when a key is not set in neither Spark context nor session configurations but a default value is provided'''
     provider = get_spark_config('io.jorvik.storage.isolation_provider', default_value='DEFAULT_VALUE')
     assert provider == 'DEFAULT_VALUE', "Default value should be returned when key is not set in either context or session configurations."  # noqa: E501
 
-def test_get_spark_config_session_only():
+def test_get_spark_config_session_only(spark):
     ''' Test when a key is set in Spark session configurations but not in context configurations'''
     spark.conf.set("io.jorvik.storage.isolation_provider", 'SPARK_SESSION_ISOLATION_PROVIDER')
     provider = get_spark_config('io.jorvik.storage.isolation_provider')
@@ -70,7 +73,7 @@ def test_validate_isolation_context_invalid():
 @patch('jorvik.utils.databricks.get_current_user')
 @patch('jorvik.utils.databricks.get_cluster_id')
 @patch('jorvik.utils.git.get_current_git_branch')
-def test_get_isolation_provider_success(mock_get_current_git_branch, mock_get_cluster_id, mock_get_current_user, mock_get_active_branch):  # noqa: E501
+def test_get_isolation_provider_success(mock_get_current_git_branch, mock_get_cluster_id, mock_get_current_user, mock_get_active_branch, spark):  # noqa: E501
     mock_get_current_git_branch.return_value = 'local_git_dev'
     mock_get_cluster_id.return_value = 'cluster_12345'
     mock_get_current_user.return_value = 'user@jorvik.com'
@@ -93,7 +96,7 @@ def test_get_isolation_provider_success(mock_get_current_git_branch, mock_get_cl
         provider = get_isolation_provider()
         assert provider() == context
 
-def test_get_isolation_provider_env_var_not_set():
+def test_get_isolation_provider_env_var_not_set(spark):
     """ Test when isolation provider is ENVIRONMENT_VARIABLE
         but environment variable JORVIK_ISOLATION_CONTEXT is not set."""
     spark.conf.set("io.jorvik.storage.isolation_provider", 'ENVIRONMENT_VARIABLE')
