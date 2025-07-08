@@ -27,7 +27,7 @@ def get_current_git_branch() -> str:
     except NameError:
         # Code runs in an interactive environment where __file__ is not defined
         # Assume the current working directory is the script directory
-        script_dir = original_cwd
+        pass
 
     try:
         # Run 'git branch --show-current' and capture the output
