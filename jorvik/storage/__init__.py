@@ -4,7 +4,6 @@ from jorvik.storage.basic import BasicStorage
 from jorvik.data_lineage.observer import DataLineageLogger
 from jorvik.storage.protocols import Storage
 
-
 def configure(track_lineage: bool = True) -> Storage:
     """ Configure the storage.
         Args:
