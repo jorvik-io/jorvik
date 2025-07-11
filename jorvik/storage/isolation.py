@@ -48,7 +48,7 @@ class IsolatedStorage():
             mount_point = "/" + mount_point
 
         isolation_folder = spark.conf.get("isolation_folder") or ""
-        isolation_context = self.isolation_provider or ""
+        isolation_context = self.isolation_provider() or ""
 
         iso_sub_path = "/".join([isolation_folder, isolation_context + "/"])
 
