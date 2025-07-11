@@ -39,26 +39,27 @@ class IsolatedStorage():
         """
         spark = SparkSession.getActiveSession()
 
-        mount_point = spark.conf.get("mount_point")
-        if not mount_point:
-            mount_point = "/mnt/"
+        mount_point = spark.conf.get("mount_point") or "/mnt"
 
-        isolation_container = spark.conf.get("isolation_path")
-        isolation_context = self.isolation_provider
+        if not mount_point.endswith("/"):
+            mount_point =mount_point + "/"
+        
+        if not mount_point.startswith("/"):
+            mount_point = "/" + mount_point
 
-        # Ensure the isolation container ends with a slash
-        if not isolation_container.endswith("/"):
-            isolation_container = isolation_container + "/"
+        isolation_folder = spark.conf.get("isolation_folder") or ""
+        isolation_context = self.isolation_provider or ""
 
-        # Ensure the isolation context ends with a slash
-        if not isolation_context.endswith("/"):
-            isolation_context = isolation_context + "/"
+        iso_sub_path = "/".join([isolation_folder, isolation_context + "/"])
 
-        # Replace the mount point with the isolation container and context
-        full_isolation_path = path.replace(mount_point, mount_point + isolation_container + isolation_context)
-        full_isolation_path = re.sub('/+', '/', full_isolation_path)  # Ensure single slashes
+        # Replace the mount point with the isolation folder and context
+        full_isolation_path = path.replace(mount_point, mount_point + iso_sub_path)
+
+        # Ensure single slashes
+        full_isolation_path = re.sub('/+', '/', full_isolation_path)
 
         return full_isolation_path
+    
 
     def _remove_isolation_path(self, path: str) -> str:
         """
@@ -72,17 +73,19 @@ class IsolatedStorage():
         """
         spark = SparkSession.getActiveSession()
 
-        isolation_container = spark.conf.get("isolation_path")
+        isolation_folder = spark.conf.get("isolation_folder") or ""
+        isolation_provider = self.isolation_provider or ""
 
-        return path.replace(isolation_container + self.isolation_provider, "")
+        isolation_path = path.replace(isolation_folder, "").replace(isolation_provider, "")
+
+        return re.sub('/+', '/', isolation_path)  # Ensure single slashes
 
     def _verbose_print_last_updated(self, path: str) -> None:
         """
         Prints a human-readable message indicating how long ago a Delta Lake table at the specified path was last updated.
 
         This method examines the Delta table's operation history to determine the most recent update time:
-        - For batch tables, it considers the latest 'WRITE' or 'MERGE' operation.
-        - For streaming tables, it includes 'STREAMING' operations.
+        - For batch tables, it considers the latest 'WRITE', 'STREAMING' or 'MERGE' operation.
 
         The elapsed time since the last update is printed in days, hours, and minutes for batch tables,
         or in seconds for streaming tables.
@@ -133,16 +136,6 @@ class IsolatedStorage():
 
         Returns:
             str: The extracted table name, or "Unknown" if it cannot be determined.
-
-        Example:
-            >>> _verbose_table_name("/foo/bar/data")
-            'bar'
-            >>> _verbose_table_name("/foo/bar/")
-            'bar'
-            >>> _verbose_table_name("/foo/bar")
-            'bar'
-            >>> _verbose_table_name("/")
-            'Unknown'
         """
         # Ensure the path does not end with a slash
         if path.endswith("/"):
@@ -166,7 +159,7 @@ class IsolatedStorage():
 
         Args:
             path (str): The file or resource path to be printed.
-            operation (str): The operation being performed (e.g., 'read', 'write').
+            operation (str): The operation being performed (e.g., 'Reading', 'Writing').
 
         Returns:
             None
@@ -309,3 +302,10 @@ class IsolatedStorage():
             self._verbose_output(path, "Writing")
 
         return self.storage.writeStream(df, isolation_path, format, checkpoint, partition_fields, options)
+
+m = "/mnt"
+a = "container"
+b = "branch"
+
+result = "/".join([m, a, b]) + "/"
+print(result)
