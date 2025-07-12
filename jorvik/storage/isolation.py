@@ -158,8 +158,6 @@ class IsolatedStorage():
             return parts[0] + "..." + parts[-1]
         elif parts:
             return parts[-1]
-        else:
-            return "Unknown"
 
     def _verbose_print_path(self, path: str, operation: str) -> None:
         """
@@ -329,53 +327,3 @@ class IsolatedStorage():
             update_condition,
             insert_condition
         )
-
-
-def test(path: str) -> str:
-    """
-    Extracts table name from a given path string.
-
-    The method processes the input path to determine a human-readable table name:
-    - If the path ends with a slash ("/"), it is removed.
-    - The path is split into parts using "/" as the delimiter.
-    - If the resulting name is empty, "Unknown" is returned.
-
-    Args:
-        path (str): The file or directory path from which to extract the table name.
-
-    Returns:
-    if num elements of path > 2:
-        str: The value after mount point name and last two elements of the path,
-    if num elements of path > 1:
-        str: The value after mount point name and last element of the path,
-    else:
-        str: The last element of the path.
-    """
-    if path.endswith("/"):
-        path = path[:-1]
-
-    parts = path.split("/")
-    parts = [item for item in parts if item != ""]
-
-    if not parts:
-        return "Unknown"
-
-    if len(parts) > 2:
-        return parts[1] + "..." + parts[-2] + "/" + parts[-1]
-
-    if len(parts) > 1:
-        return parts[1] + "..." + parts[-1]
-
-    return parts[-1]
-
-
-xx = "/mnt/silver/customer/some_id/"
-
-test(xx)
-
-operation = "sdf"
-tt = ["Merging", "Reading"]
-ff = "delta"
-
-if operation in tt and ff == "delta":
-    print("yes")
