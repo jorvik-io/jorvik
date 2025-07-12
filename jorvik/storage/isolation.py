@@ -42,8 +42,8 @@ class IsolatedStorage():
         mount_point = spark.conf.get("mount_point") or "/mnt"
 
         if not mount_point.endswith("/"):
-            mount_point =mount_point + "/"
-        
+            mount_point = mount_point + "/"
+
         if not mount_point.startswith("/"):
             mount_point = "/" + mount_point
 
@@ -59,7 +59,6 @@ class IsolatedStorage():
         full_isolation_path = re.sub('/+', '/', full_isolation_path)
 
         return full_isolation_path
-    
 
     def _remove_isolation_path(self, path: str) -> str:
         """
@@ -148,10 +147,10 @@ class IsolatedStorage():
 
         if not parts:
             return "Unknown"
-        
+
         if len(parts) > 2:
             return parts[1] + "..." + parts[-2] + "/" + parts[-1]
-        
+
         if len(parts) > 1:
             return parts[1] + "..." + parts[-1]
 
@@ -197,7 +196,7 @@ class IsolatedStorage():
         isolation_path = self._create_isolation_path(path)
         return self.storage.exists(isolation_path)
 
-    def read(self, path: str, format: str, options: dict =  None) -> DataFrame:
+    def read(self, path: str, format: str, options: dict = None) -> DataFrame:
         """
         Read data from the given path. If an isolated path exists, read from there.
 
@@ -308,23 +307,22 @@ class IsolatedStorage():
         return self.storage.writeStream(df, isolation_path, format, checkpoint, partition_fields, options)
 
     def merge(self, df: DataFrame, path: str, merge_condition: str, partition_fields: str | list = "",
-            merge_schemas: bool = False, update_condition: str | bool = None, insert_condition: str | bool = None) -> None:
-        
+              merge_schemas: bool = False, update_condition: str | bool = None, insert_condition: str | bool = None) -> None:
+
         isolation_path = self._create_isolation_path(path)
 
         if self.exists(isolation_path):
             path = isolation_path
-        
+
         self.storage.merge(
             df,
             path,
-            merge_condition, 
-            partition_fields, 
-            merge_schemas, 
-            update_condition, 
+            merge_condition,
+            partition_fields,
+            merge_schemas,
+            update_condition,
             insert_condition
         )
-
 
 
 def test(path: str) -> str:
@@ -355,15 +353,15 @@ def test(path: str) -> str:
 
     if not parts:
         return "Unknown"
-    
+
     if len(parts) > 2:
         return parts[1] + "..." + parts[-2] + "/" + parts[-1]
-    
+
     if len(parts) > 1:
         return parts[1] + "..." + parts[-1]
 
     return parts[-1]
-    
+
 
 xx = "/mnt/silver/customer/some_id/"
 
