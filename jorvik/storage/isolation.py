@@ -74,7 +74,7 @@ class IsolatedStorage():
         spark = SparkSession.getActiveSession()
 
         isolation_folder = spark.conf.get("isolation_folder") or ""
-        isolation_provider = self.isolation_provider or ""
+        isolation_provider = self.isolation_provider() or ""
 
         isolation_path = path.replace(isolation_folder, "").replace(isolation_provider, "")
 
@@ -127,31 +127,35 @@ class IsolatedStorage():
         The method processes the input path to determine a human-readable table name:
         - If the path ends with a slash ("/"), it is removed.
         - The path is split into parts using "/" as the delimiter.
-        - If the path ends with "/data", the method returns the name of the parent directory (the second-to-last part).
-        - Otherwise, it returns the last part of the path.
         - If the resulting name is empty, "Unknown" is returned.
 
         Args:
             path (str): The file or directory path from which to extract the table name.
 
         Returns:
-            str: The extracted table name, or "Unknown" if it cannot be determined.
+        if num elements of path > 2:
+            str: The value after mount point name and last two elements of the path,
+        if num elements of path > 1:
+            str: The value after mount point name and last element of the path,
+        else:
+            str: The last element of the path.
         """
-        # Ensure the path does not end with a slash
         if path.endswith("/"):
             path = path[:-1]
 
         parts = path.split("/")
-        # If the path ends with "/data", return the second-to-last part
-        if path.endswith("/data"):
-            result = parts[-2] if len(parts) > 1 else ""
-        else:
-            result = parts[-1] if parts else ""
+        parts = [item for item in parts if item != ""]
 
-        if not result:
+        if not parts:
             return "Unknown"
-        else:
-            return result
+        
+        if len(parts) > 2:
+            return parts[1] + "..." + parts[-2] + "/" + parts[-1]
+        
+        if len(parts) > 1:
+            return parts[1] + "..." + parts[-1]
+
+        return parts[-1]
 
     def _verbose_print_path(self, path: str, operation: str) -> None:
         """
@@ -173,11 +177,11 @@ class IsolatedStorage():
         dots = '.' * (40 - len(table_name)) if len(table_name) < 40 else ' '
         print(f"{operation}: {table_name} {dots} path: {path}")
 
-    def _verbose_output(self, path: str, operation: str):
+    def _verbose_output(self, path: str, operation: str, format: str):
 
         self._verbose_print_path(path, operation)
 
-        if operation == "Reading":
+        if operation in ["Merging", "Reading"] and format == "delta":
             self._verbose_print_last_updated(path)
 
     def exists(self, path: str) -> bool:
@@ -193,7 +197,7 @@ class IsolatedStorage():
         isolation_path = self._create_isolation_path(path)
         return self.storage.exists(isolation_path)
 
-    def read(self, path, format=None, options=None) -> DataFrame:
+    def read(self, path: str, format: str, options: dict =  None) -> DataFrame:
         """
         Read data from the given path. If an isolated path exists, read from there.
 
@@ -211,7 +215,7 @@ class IsolatedStorage():
             path = isolation_path
 
         if self.verbose:
-            self._verbose_output(path, "Reading")
+            self._verbose_output(path, "Reading", format=format)
 
         return self.storage.read(path, format, options)
 
@@ -231,14 +235,14 @@ class IsolatedStorage():
         isolation_path = self._create_isolation_path(path)
 
         if self.exists(isolation_path):
-            path = re.sub('/+', '/', isolation_path)
+            path = isolation_path
 
         if self.verbose:
-            self._verbose_output(path, "Reading")
+            self._verbose_output(path, "Reading", format=format)
 
         return self.storage.readStream(path, format, options)
 
-    def read_production_data(self, path, format=None, options=None) -> DataFrame:
+    def read_production_data(self, path: str, format: str, options: dict = None) -> DataFrame:
         """
         Read data from the production (non-isolated) path.
         This method reads data from the original path without considering isolation.
@@ -259,7 +263,7 @@ class IsolatedStorage():
 
         return self.storage.read(configured_path, format=format, options=options)
 
-    def write(self, df: DataFrame, path: str = None, format: str = None, mode: str = None,
+    def write(self, df: DataFrame, path: str, format: str, mode: str,
               partition_fields: str | list = "", options: dict = None) -> None:
         """
         Write data to the isolated path.
@@ -303,9 +307,71 @@ class IsolatedStorage():
 
         return self.storage.writeStream(df, isolation_path, format, checkpoint, partition_fields, options)
 
-m = "/mnt"
-a = "container"
-b = "branch"
+    def merge(self, df: DataFrame, path: str, merge_condition: str, partition_fields: str | list = "",
+            merge_schemas: bool = False, update_condition: str | bool = None, insert_condition: str | bool = None) -> None:
+        
+        isolation_path = self._create_isolation_path(path)
 
-result = "/".join([m, a, b]) + "/"
-print(result)
+        if self.exists(isolation_path):
+            path = isolation_path
+        
+        self.storage.merge(
+            df,
+            path,
+            merge_condition, 
+            partition_fields, 
+            merge_schemas, 
+            update_condition, 
+            insert_condition
+        )
+
+
+
+def test(path: str) -> str:
+    """
+    Extracts table name from a given path string.
+
+    The method processes the input path to determine a human-readable table name:
+    - If the path ends with a slash ("/"), it is removed.
+    - The path is split into parts using "/" as the delimiter.
+    - If the resulting name is empty, "Unknown" is returned.
+
+    Args:
+        path (str): The file or directory path from which to extract the table name.
+
+    Returns:
+    if num elements of path > 2:
+        str: The value after mount point name and last two elements of the path,
+    if num elements of path > 1:
+        str: The value after mount point name and last element of the path,
+    else:
+        str: The last element of the path.
+    """
+    if path.endswith("/"):
+        path = path[:-1]
+
+    parts = path.split("/")
+    parts = [item for item in parts if item != ""]
+
+    if not parts:
+        return "Unknown"
+    
+    if len(parts) > 2:
+        return parts[1] + "..." + parts[-2] + "/" + parts[-1]
+    
+    if len(parts) > 1:
+        return parts[1] + "..." + parts[-1]
+
+    return parts[-1]
+    
+
+xx = "/mnt/silver/customer/some_id/"
+
+test(xx)
+
+operation = "sdf"
+tt = ["Merging", "Reading"]
+ff = "delta"
+
+if operation in tt and ff == "delta":
+    print("yes")
