@@ -139,22 +139,27 @@ class IsolatedStorage():
         else:
             str: The last element of the path.
         """
+        spark = SparkSession.getActiveSession()
+
         if path.endswith("/"):
             path = path[:-1]
 
+        mount_point = spark.conf.get("mount_point") or ""
+
         parts = path.split("/")
-        parts = [item for item in parts if item != ""]
+        parts = [p for p in parts if p not in ("", "mnt", "dbfs", mount_point)]
 
         if not parts:
             return "Unknown"
 
         if len(parts) > 2:
-            return parts[1] + "..." + parts[-2] + "/" + parts[-1]
-
-        if len(parts) > 1:
-            return parts[1] + "..." + parts[-1]
-
-        return parts[-1]
+            return parts[0] + "..." + parts[-2] + "/" + parts[-1]
+        elif len(parts) > 1:
+            return parts[0] + "..." + parts[-1]
+        elif parts:
+            return parts[-1]
+        else:
+            return "Unknown"
 
     def _verbose_print_path(self, path: str, operation: str) -> None:
         """
@@ -173,8 +178,9 @@ class IsolatedStorage():
         # - print: Outputs the formatted string showing the operation, table name, and path.
         """
         table_name = self._verbose_table_name(path)
-        dots = '.' * (40 - len(table_name)) if len(table_name) < 40 else ' '
-        print(f"{operation}: {table_name} {dots} path: {path}")
+        prefix = f"{operation}: {table_name}"
+        dots = '.' * max(1, 50 - len(prefix))  # Adjust 50 to set the `path:` column
+        print(f"{prefix} {dots} path: {path}")
 
     def _verbose_output(self, path: str, operation: str, format: str):
 
