@@ -4,6 +4,7 @@
         "jorvik",
         "noqa",
         "pyspark",
-        "isin"
+        "isin",
+        "dbfs"
     ]
 }
