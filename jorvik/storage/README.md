@@ -12,7 +12,41 @@ st.write(df, "/new/path/to/table", format="parquet", mode="overwrite")
 ## Storage isolation
 
 ### Isolated storage
-- TO BE DOCUMENTED: `IsolatedStorage` class
+```python
+from jorvik import storage
+st = storage.configure(isolation_provider.databricks.get_active_branch(), verbose=True, track_lineage=True)
+df = st.read("/mnt/path/to/table/", format="delta")
+st.write(df, "/mnt/path/to/table", format="delta", mode="overwrite")
+```
+
+To configure Spark configuration keys for Isolated Storage update the below keys.
+
+| Config keys                               | Default value | Required to be set |
+| --------                                  | -------       |----------- |
+| `io.jorvik.storage.isolation_folder`      | `str: = None`          | True |
+| `io.jorvik.storage.mount_point`           | `str: = mnt`         | False |           
+| `io.jorvik.storage.production_context`    | `list[str]: = ['main', 'master', 'production', 'prod']` | False |
+
+Configure the Isolated Storage by setting Spark configuration key `io.jorvik.storage.isolation_folder` to the name of a folder where isolated data should be written to. 
+
+Example: 
+* `spark.conf.set("io.jorvik.storage.isolation_folder", "isolated")`
+
+If your mount point is not named `mnt`. Set `io.jorvik.storage.mount_point` to your custom mount point name.
+
+`io.jorvik.storage.production_context` holds the values of production context for where no isolation is performed.
+
+------------------
+Working example:
+
+* Working in Databricks on a checked out branch named `feature-branch`
+* isolation_folder is set to "featureisolation" through `spark.conf.set("io.jorvik.storage.isolation_folder", "featureisolation")`
+* data path: `/mnt/prod_storage/silver/foo/bar`
+
+The isolated path will be configured to `/mnt/featureisolation/feature-branch/prod_storage/silver/foo/bar`
+
+* st.write(df, data_path, format="delta", mode="overwrite") will always write to the configured path.
+* st.read(df, data_path, format="delta") will read from the configured path if it exists. Else the regular path.
 
 ### Isolation provider
 
