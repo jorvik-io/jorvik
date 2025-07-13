@@ -5,6 +5,7 @@
         "noqa",
         "pyspark",
         "isin",
-        "dbfs"
+        "dbfs",
+        "featureisolation"
     ]
 }
