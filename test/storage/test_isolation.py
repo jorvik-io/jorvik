@@ -64,6 +64,7 @@ def test_remove_isolation_path(input_path, isolation_folder, isolation_context, 
         result = storage._remove_isolation_path(input_path)
         assert result == expected
 
+
 @pytest.mark.parametrize(
     "input_path, mount_point, expected",
     [
@@ -74,6 +75,7 @@ def test_remove_isolation_path(input_path, isolation_folder, isolation_context, 
         ("/mnt/justone", "", "justone"),
         ("/mnt/", "", "Unknown"),
         ("", "", "Unknown"),
+        ("/", "", "Unknown"),
     ]
 )
 def test_verbose_table_name(input_path, mount_point, expected):
@@ -81,7 +83,7 @@ def test_verbose_table_name(input_path, mount_point, expected):
         mock_spark = MagicMock()
         mock_spark.conf.get.side_effect = lambda key: {
             "mount_point": mount_point
-        }.get(key)
+        }.get(key, "")
         mock_spark_session.getActiveSession.return_value = mock_spark
 
         storage = IsolatedStorage(storage=BasicStorage(), isolation_provider=lambda: "")
@@ -168,7 +170,7 @@ def test_verbose_print_last_updated(capfd):
         mock_delta_table = MagicMock()
         mock_delta_table_class.forPath.return_value = mock_delta_table
 
-        # Set up the transformation chain mocks
+        # Set up the transformation chain mocks for the success case
         mock_col.return_value = MagicMock(name="col")
         mock_max.return_value = MagicMock(name="max_col")
 
@@ -183,10 +185,64 @@ def test_verbose_print_last_updated(capfd):
         mock_filtered_df.limit.return_value = mock_limited_df
         mock_limited_df.select.return_value = mock_selected_df
 
-        # Run test
-        storage = IsolatedStorage(storage=MagicMock(), isolation_provider=lambda: "")
+        # Run test for success case
+        storage = IsolatedStorage(storage=MagicMock(), verbose=True, isolation_provider=lambda: "")
         storage._verbose_print_last_updated(test_path)
 
-        # Capture and verify printed output
         out, _ = capfd.readouterr()
         assert "Table was last updated: 2 days, 5.0 hours, 13.0 minutes ago." in out
+
+        # Update mock for no matching operations (None timestamp)
+        mock_selected_df.collect.return_value = [[None]]
+
+        # Run test again for else branch
+        storage._verbose_print_last_updated(test_path)
+
+        out, _ = capfd.readouterr()
+        assert "No WRITE, MERGE, or STREAMING operations found in Delta table history." in out
+
+@patch.object(IsolatedStorage, "_verbose_print_path")
+@patch.object(IsolatedStorage, "_verbose_print_last_updated")
+def test_verbose_output_triggers_last_updated_for_reading_delta(
+    mock_print_last_updated, mock_print_path
+):
+    storage = IsolatedStorage(storage=MagicMock(), isolation_provider=lambda: "test", verbose=True)
+
+    storage._verbose_output("/mnt/data/my_table", operation="Reading", format="delta")
+
+    mock_print_path.assert_called_once_with("/mnt/data/my_table", "Reading")
+    mock_print_last_updated.assert_called_once_with("/mnt/data/my_table")
+
+
+@patch.object(IsolatedStorage, "_verbose_print_path")
+@patch.object(IsolatedStorage, "_verbose_print_last_updated")
+@pytest.mark.parametrize("operation,format", [
+    ("Reading", "parquet"),
+    ("Merging", "csv"),
+    ("Writing", "delta"),
+    ("Writing", "parquet")
+])
+def test_verbose_output_skips_last_updated_when_not_reading_merging_delta(
+    mock_print_last_updated, mock_print_path, operation, format
+):
+    storage = IsolatedStorage(storage=MagicMock(), isolation_provider=lambda: "test", verbose=True)
+
+    storage._verbose_output("/mnt/data/my_table", operation=operation, format=format)
+
+    mock_print_path.assert_called_once_with("/mnt/data/my_table", operation)
+    mock_print_last_updated.assert_not_called()
+
+def test_exists_calls_storage_with_isolated_path():
+    mock_storage = MagicMock()
+    mock_storage.exists.return_value = True
+
+    storage = IsolatedStorage(
+        storage=mock_storage,
+        isolation_provider=lambda: "branch"
+    )
+
+    with patch.object(storage, "_create_isolation_path", return_value="/mnt/isolated/data/table"):
+        result = storage.exists("/mnt/data/table")
+
+    assert result is True
+    mock_storage.exists.assert_called_once_with("/mnt/isolated/data/table")
