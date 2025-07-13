@@ -3,6 +3,9 @@
         "CICD",
         "jorvik",
         "noqa",
-        "pyspark"
+        "pyspark",
+        "isin",
+        "dbfs",
+        "featureisolation"
     ]
 }
