@@ -48,8 +48,8 @@ def mock_spark_conf():
 )
 def test_create_isolation_path_unit(mock_spark_conf, mount_point, isolation_folder, isolation_context, input_path, expected):
     mock_spark_conf.conf.get.side_effect = lambda key: {
-        "mount_point": mount_point,
-        "isolation_folder": isolation_folder,
+        "io.jorvik.storage.mount_point": mount_point,
+        "io.jorvik.storage.isolation_folder": isolation_folder,
     }.get(key)
 
     storage = IsolatedStorage(storage=BasicStorage(), isolation_provider=lambda: isolation_context)
@@ -65,7 +65,7 @@ def test_create_isolation_path_unit(mock_spark_conf, mount_point, isolation_fold
     ]
 )
 def test_remove_isolation_path(mock_spark_conf, input_path, isolation_folder, isolation_context, expected):
-    mock_spark_conf.conf.get.side_effect = lambda key: {"isolation_folder": isolation_folder}.get(key)
+    mock_spark_conf.conf.get.side_effect = lambda key: {"io.jorvik.storage.isolation_folder": isolation_folder}.get(key)
 
     storage = IsolatedStorage(storage=BasicStorage(), isolation_provider=lambda: isolation_context.strip("/"))
     assert storage._remove_isolation_path(input_path) == expected
@@ -85,7 +85,7 @@ def test_remove_isolation_path(mock_spark_conf, input_path, isolation_folder, is
     ]
 )
 def test_verbose_table_name(mock_spark_conf, input_path, mount_point, expected):
-    mock_spark_conf.conf.get.side_effect = lambda key: {"mount_point": mount_point}.get(key, "")
+    mock_spark_conf.conf.get.side_effect = lambda key: {"io.jorvik.storage.mount_point": mount_point}.get(key, "")
     storage = IsolatedStorage(storage=BasicStorage(), isolation_provider=lambda: "")
     assert storage._verbose_table_name(input_path) == expected
 
@@ -109,7 +109,7 @@ def test_verbose_table_name(mock_spark_conf, input_path, mount_point, expected):
     ]
 )
 def test_verbose_print_path(mock_spark_conf, input_path, mount_point, operation, expected_output, capfd):
-    mock_spark_conf.conf.get.side_effect = lambda key: {"mount_point": mount_point}.get(key)
+    mock_spark_conf.conf.get.side_effect = lambda key: {"io.jorvik.storage.mount_point": mount_point}.get(key)
     storage = IsolatedStorage(storage=BasicStorage(), isolation_provider=lambda: "")
     storage._verbose_print_path(input_path, operation)
 

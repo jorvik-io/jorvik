@@ -39,7 +39,7 @@ class IsolatedStorage():
         """
         spark = SparkSession.getActiveSession()
 
-        mount_point = spark.conf.get("mount_point") or "/mnt"
+        mount_point = spark.conf.get("io.jorvik.storage.mount_point") or "/mnt"
 
         if not mount_point.endswith("/"):
             mount_point = mount_point + "/"
@@ -47,7 +47,7 @@ class IsolatedStorage():
         if not mount_point.startswith("/"):
             mount_point = "/" + mount_point
 
-        isolation_folder = spark.conf.get("isolation_folder") or ""
+        isolation_folder = spark.conf.get("io.jorvik.storage.isolation_folder") or ""
         isolation_context = self.isolation_provider() or ""
 
         iso_sub_path = "/".join([isolation_folder, isolation_context + "/"])
@@ -72,7 +72,7 @@ class IsolatedStorage():
         """
         spark = SparkSession.getActiveSession()
 
-        isolation_folder = spark.conf.get("isolation_folder") or ""
+        isolation_folder = spark.conf.get("io.jorvik.storage.isolation_folder") or ""
         isolation_provider = self.isolation_provider() or ""
 
         isolation_path = path.replace(isolation_folder, "").replace(isolation_provider, "")
@@ -144,7 +144,7 @@ class IsolatedStorage():
         if path.endswith("/"):
             path = path[:-1]
 
-        mount_point = spark.conf.get("mount_point") or ""
+        mount_point = spark.conf.get("io.jorvik.storage.mount_point") or ""
 
         parts = path.split("/")
         parts = [p for p in parts if p not in ("", "mnt", "dbfs", mount_point)]
