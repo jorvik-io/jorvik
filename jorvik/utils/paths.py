@@ -1,6 +1,19 @@
 import inspect
-import os
 from jorvik.utils.databricks import get_notebook_path, DatabricksUtilsError
+import re
+
+def is_site_package_path(path: str) -> bool:
+    """Check if the given path is a site-packages directory
+    Example:
+        is_site_package_path("/usr/local/lib/python3.11/site-packages/numpy") -> True
+        is_site_package_path("/some/other/path") -> False
+    Args:
+        path (str): The path to check
+    Returns:
+        bool: True if the path is a site-packages directory, False otherwise
+    """
+    pattern = r'/python[^/]+/site-packages/'
+    return re.search(pattern, path) is not None
 
 def is_notebook():
     """Check if the current environment is a Jupyter notebook or similar interactive environment.
@@ -30,8 +43,7 @@ def get_codefile_path() -> str:
     stack = inspect.stack()
     for frame_info in reversed(stack):
         file = frame_info.filename
-        # Filter out system or interactive files
-        if file and not file.startswith('<') and os.path.exists(file):
+        if file and (not is_site_package_path(file)) and ('pytest' not in file):
             return file
 
     return "Unknown code file path"
