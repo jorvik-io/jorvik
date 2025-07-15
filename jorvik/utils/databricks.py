@@ -77,4 +77,4 @@ def get_cluster_id() -> str:
 
 def get_notebook_path() -> str:
     """ Gets the current notebook path"""
-    return get_notebook_context()['notebookPath']
+    return get_notebook_context()["extraContext"]["notebook_path"]
