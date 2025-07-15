@@ -71,3 +71,7 @@ def get_current_user() -> str:
 def get_cluster_id() -> str:
     """ Gets the current Databricks cluster ID"""
     return get_notebook_context()['tags']['clusterId']
+
+def get_notebook_path() -> str:
+    """ Gets the current notebook path"""
+    return get_notebook_context()['notebookPath']
