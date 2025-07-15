@@ -26,11 +26,12 @@ def get_codefile_path() -> str:
         except DatabricksUtilsError:
             return "Unknown notebook path"
 
+    # __file__ cannot be used because it refers to the file where that function is defined, not where it's called from
     stack = inspect.stack()
     for frame_info in reversed(stack):
         file = frame_info.filename
         # Filter out system or interactive files
         if file and not file.startswith('<') and os.path.exists(file):
-            return os.path.abspath(file)
+            return file
 
     return "Unknown code file path"
