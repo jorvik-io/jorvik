@@ -7,12 +7,15 @@ from pyspark.errors.exceptions.captured import SparkNoSuchElementException
 
 class DatabricksUtilsError(Exception):
     """Custom exception for Databricks utility errors."""
-    def __init__(self):
-        message = "Could not determine the dbutils client configuration. Ensure you are running this code in a Databricks notebook environment."  # noqa: E501
+    def __init__(self, error: str = None):
+        message = f"{error}. Ensure you are running this code in a Databricks notebook environment."  # noqa: E501
         super().__init__(message)
 
 def get_spark() -> SparkSession:
-    return SparkSession.getActiveSession()
+    spark = SparkSession.getActiveSession()
+    if spark is None:
+        raise DatabricksUtilsError("No active Spark session found")
+    return spark
 
 def get_dbutils() -> Any:
     """ Gets the Databricks dbutils client
@@ -34,7 +37,7 @@ def get_dbutils() -> Any:
         import IPython  # type: ignore
         return IPython.get_ipython().user_ns["dbutils"]  # type:ignore
     else:
-        raise DatabricksUtilsError()
+        raise DatabricksUtilsError("Could not determine the dbutils client configuration")
 
 def get_notebook_context() -> dict:
     """ Gets the current notebook context

@@ -18,6 +18,21 @@ class TimeoutException(Exception):
 def timeout_handler(signum, frame):
     raise TimeoutException("Command timed out")
 
+def get_codefile_path() -> str:
+    """
+    Get the path of the code file that creates the DataFrame.
+    """
+    if '__file__' in globals():
+        return __file__
+
+    # Attempt to get the notebook path from Databricks context
+    try:
+        from jorvik.utils.databricks import get_notebook_path, DatabricksUtilsError
+        return get_notebook_path()
+    except DatabricksUtilsError:
+        pass
+    return "Unknown code file path"
+
 class DataLineageLogger:
     '''
     Initialize the DataLineageLogger with a DataFrame and a path to store lineage logs.
