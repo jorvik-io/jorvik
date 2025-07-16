@@ -1,6 +1,7 @@
 '''This module provides utility functions to interact with git client commands.'''
 import os
 import subprocess
+from jorvik.utils.paths import get_codefile_path
 
 class GitUtilsError(Exception):
     """Custom exception for Git utility errors."""
@@ -20,14 +21,14 @@ def get_current_git_branch() -> str:
 
     original_cwd = os.getcwd()
 
-    try:
-        # Change to the directory containing this code file
-        script_dir = os.path.abspath(os.path.dirname(__file__))
-        os.chdir(script_dir)
-    except NameError:
-        # Code runs in an interactive environment where __file__ is not defined
-        # Assume the current working directory is the script directory
-        pass
+    # Change to the directory containing the outermost code file
+    code_file_path = get_codefile_path()
+    if code_file_path.startswith("Unknown"):
+        # If the code file path is unknown, assume the current working directory is the script directory
+        script_dir = original_cwd
+    else:
+        script_dir = os.path.abspath(os.path.dirname(code_file_path))
+    os.chdir(script_dir)
 
     try:
         # Run 'git branch --show-current' and capture the output
