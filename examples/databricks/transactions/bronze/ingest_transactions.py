@@ -2,36 +2,28 @@
 # MAGIC %md
 # MAGIC # Transactions Ingestion
 # MAGIC
-# MAGIC This notebook creates dummy transaction data for the purposes of the example, in a realistic scenario this notebook would fetch data from a production system.
-# MAGIC
-# MAGIC For example:
+# MAGIC This notebook creates dummy transaction data for the purposes of the example. In a realistic scenario this notebook would fetch data from a production system for example:
 # MAGIC - It could listen to an event topic and accumulate data in a Delta Table.
 # MAGIC - It could copy data from a transactional Database.
 # MAGIC - It could fetch data from the API of the ERP system.
+# MAGIC
+# MAGIC The `etl` decorator simplifies the creation of reliable/ production hardened pipelines. A lot of repeated work has been abstracted out and the developer needs to only specify the schemas for input and output data and the transformations that need to be applied to them. Behind the scenes it will verify that the input and output have the expected schema and it will fail the pipeline if they do not. This behavior can be turned off by supplying the validate_schemas=False parameter. It is though recommended to keep it on, as silent schema changes can negatively affect your data quality.
 
 # COMMAND ----------
 
 from datetime import datetime
 
-from pyspark.sql.types import StringType, StructField, StructType, IntegerType, FloatType, TimestampType
-from pyspark.sql import functions as F
-
 from jorvik.pipelines import etl, Input, FileOutput
 from jorvik.storage import configure
 
+from examples.databricks.transactions.bronze.schemas import raw_transactions
+
 # COMMAND ----------
 
-raw_transactions = FileOutput(
-    schema=StructType([
-        StructField("transaction_id", StringType(), False),
-        StructField("customer_id", StringType(), False),
-        StructField("product_id", StringType(), False),
-        StructField("quantity", IntegerType(), True),
-        StructField("price", FloatType(), True),
-        StructField("timestamp", TimestampType(), True)
-    ]),
-    path="/mnt/bronze/raw_transactions/data",
-    format="delta",
+result = FileOutput(
+    schema=raw_transactions.schema,
+    path=raw_transactions.path,
+    format=raw_transactions.format,
     mode="overwrite",
 )
 
@@ -58,9 +50,9 @@ class MemoryInput(Input):
 
 # COMMAND ----------
 
-@etl(inputs=MemoryInput(), outputs=raw_transactions)
-def ingest_transactions(raw_transactions):
-    return raw_transactions
+@etl(inputs=MemoryInput(), outputs=result)
+def ingest_transactions(df):
+    return df
 
 # COMMAND ----------
 
