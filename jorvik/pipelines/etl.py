@@ -12,6 +12,7 @@ from jorvik.audit import schemas
 
 @dataclass
 class Input(ABC):
+    schema = None
 
     @abstractmethod
     def extract(self):
@@ -21,6 +22,7 @@ class Input(ABC):
 
 @dataclass
 class Output(ABC):
+    schema = None
 
     @abstractmethod
     def load(self, df: DataFrame):
@@ -141,9 +143,13 @@ class StreamFileOutput(Output):
 
 
 class ETL:
-    def __init__(self, inputs: list[Input], outputs: list[Output],
+    def __init__(self, inputs: list[Input] | Input, outputs: list[Output] | Output,
                  transform_func: Callable[[tuple[DataFrame, ...]], tuple[DataFrame, ...]],
                  validate_schemas: bool = True):
+        if not isinstance(inputs, list):
+            inputs = [inputs]
+        if not isinstance(outputs, list):
+            outputs = [outputs]
         self.inputs = inputs
         self.outputs = outputs
         self.transform_func = transform_func
@@ -182,14 +188,18 @@ class ETL:
     def verify_input_schemas(self, data: tuple[DataFrame, ...]):
         """ Verify that the input schema matches the expected schema. """
         for i, df in zip(self.inputs, data):
-            if i.schema is not None:
-                assert schemas.is_subset(i.schema, df.schema)
+            if i.schema is None:
+                raise RuntimeError("No schema defined for input and the validate_schemas parameter is set to True."
+                                   " To suppress this set the validate_schemas parameter to False.")
+            assert schemas.is_subset(i.schema, df.schema)
 
     def verify_output_schemas(self, data: tuple[DataFrame, ...]):
         """ Verify that the output schema matches the expected schema. """
         for o, df in zip(self.outputs, data):
-            if o.schema is not None:
-                assert schemas.are_equal(o.schema, df.schema)
+            if o.schema is None:
+                raise RuntimeError("No schema defined for output and the validate_schemas parameter is set to True."
+                                   " To suppress this set the validate_schemas parameter to False.")
+            assert schemas.are_equal(o.schema, df.schema)
 
 def etl(inputs: list[Input], outputs: list[Output], validate_schemas: bool = True):
     """ Decorator to run the ETL process. """
