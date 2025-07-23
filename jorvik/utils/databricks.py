@@ -3,10 +3,11 @@ import json
 from typing import Any
 
 from pyspark.sql import SparkSession
-from pyspark.errors.exceptions.captured import SparkNoSuchElementException
+
 
 class DatabricksUtilsError(Exception):
     """Custom exception for Databricks utility errors."""
+
     def __init__(self, error: str = None):
         message = f"{error}. Ensure you are running this code in a Databricks notebook environment."  # noqa: E501
         super().__init__(message)
@@ -25,10 +26,7 @@ def get_dbutils() -> Any:
         DatabricksUtilsError: If the dbutils client configuration cannot be determined.
     """
     spark = get_spark()
-    try:
-        client_config = spark.conf.get("spark.databricks.service.client.enabled")
-    except SparkNoSuchElementException:
-        client_config = None
+    client_config = spark.conf.get("spark.databricks.service.client.enabled", None)
 
     if client_config == "true":
         from pyspark.dbutils import DBUtils  # type:ignore
