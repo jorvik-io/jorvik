@@ -4,7 +4,7 @@ This example demostrates how Jorvik can help you build reliable/ production hard
 
 ```mermaid
 graph LR;
-  nb_ingest_raw_transactions --> nb_clean_transactions --> nb_analyse_transactions
+  nb_ingest_raw_transactions --> nb_clean_transactions --> nb_create_customer_summary
   nb_ingest_raw_customers --> nb_create_customer_summary
 ```
 
