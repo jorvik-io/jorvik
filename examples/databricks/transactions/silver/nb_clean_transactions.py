@@ -39,7 +39,7 @@ def clean(raw):
     return (
         raw.filter("quantity > 0")
         .filter("price > 0")
-        .withColumn("total_amount", F.col("quantity") * F.col("price"))
+        .withColumn("total_amount", (F.col("quantity") * F.col("price")).cast('float'))
         .withColumn("transaction_date", F.to_date("timestamp"))
         .withColumn("transaction_hour", F.hour("timestamp"))
         .withColumn("unit_price", F.col("price"))
