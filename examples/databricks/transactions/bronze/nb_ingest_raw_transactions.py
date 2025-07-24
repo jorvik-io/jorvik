@@ -2,7 +2,8 @@
 # MAGIC %md
 # MAGIC # Transactions Ingestion
 # MAGIC
-# MAGIC This notebook creates dummy transaction data for the purposes of the example. In a realistic scenario this notebook would fetch data from a production system for example:
+# MAGIC This notebook creates dummy transaction data for the purposes of the example.
+# MAGIC In a realistic scenario this notebook would fetch data from a production system for example:
 # MAGIC - It could listen to an event topic and accumulate data in a Delta Table.
 # MAGIC - It could copy data from a transactional Database.
 # MAGIC - It could fetch data from the API of the ERP system.
@@ -13,7 +14,6 @@
 from datetime import datetime
 
 from jorvik.pipelines import etl, Input, FileOutput
-from jorvik.storage import configure
 
 from examples.databricks.transactions.bronze.schemas import raw_transactions
 
@@ -32,7 +32,7 @@ class MemoryInput(Input):
     schema = raw_transactions.schema
 
     def extract(self):
-        return spark.createDataFrame([
+        return spark.createDataFrame([  # noqa: F821
             ("1", "1", "1", 1, 11.0, datetime.fromisoformat("2022-01-01T00:00:00Z")),
             ("2", "1", "2", 1, 12.0, datetime.fromisoformat("2022-01-02T00:00:00Z")),
             ("3", "1", "3", 2, 13.0, datetime.fromisoformat("2022-01-03T00:00:00Z")),

@@ -2,7 +2,8 @@
 # MAGIC %md
 # MAGIC # Customers Ingestion
 # MAGIC
-# MAGIC This notebook creates dummy customer data for the purposes of the example. In a realistic scenario this notebook would fetch data from a production system for example:
+# MAGIC This notebook creates dummy customer data for the purposes of the example.
+# MAGIC In a realistic scenario this notebook would fetch data from a production system for example:
 # MAGIC - It could listen to an event topic and accumulate data in a Delta Table.
 # MAGIC - It could copy data from a transactional Database.
 # MAGIC - It could fetch data from the API of the ERP system.
@@ -13,7 +14,6 @@
 from datetime import date
 
 from jorvik.pipelines import etl, Input, FileOutput
-from jorvik.storage import configure
 
 from examples.databricks.transactions.bronze.schemas import raw_customers
 
@@ -32,7 +32,7 @@ class MemoryInput(Input):
     schema = raw_customers.schema
 
     def extract(self):
-        return spark.createDataFrame([
+        return spark.createDataFrame([  # noqa: F821
             ("1", "Jhon Doe", "jhon.doe@mail.com", 30, "New York", date(2022, 1, 1)),
             ("2", "Jane Doe", "jane.doe@mail.com", 25, "Los Angeles", date(2022, 1, 1)),
             ("3", "Mike Smith", "mike.smith@mail.com", 40, "Chicago", date(2022, 1, 1)),
