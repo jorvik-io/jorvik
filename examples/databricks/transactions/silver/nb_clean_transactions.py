@@ -2,7 +2,8 @@
 # MAGIC %md
 # MAGIC # Clean Transactions
 # MAGIC
-# MAGIC This notebook cleans transaction data by removing invalid transactions and computing a few extra columns like 'total_amount'. A trasanction is considered invalid if:
+# MAGIC This notebook cleans transaction data by removing invalid transactions
+# MAGIC and computing a few extra columns like 'total_amount'. A transaction is considered invalid if:
 # MAGIC - The amount is negative.
 # MAGIC - The quantity is negative.
 # MAGIC
@@ -19,16 +20,16 @@ from examples.databricks.transactions.silver.schemas import clean_transactions
 # COMMAND ----------
 
 raw = FileInput(
-  path=raw_transactions.path,
-  schema=raw_transactions.schema,
-  format=raw_transactions.format
+    path=raw_transactions.path,
+    schema=raw_transactions.schema,
+    format=raw_transactions.format
 )
 
 clean = FileOutput(
-  path=clean_transactions.path,
-  schema=clean_transactions.schema,
-  format=clean_transactions.format,
-  mode='overwrite'
+    path=clean_transactions.path,
+    schema=clean_transactions.schema,
+    format=clean_transactions.format,
+    mode='overwrite'
 )
 
 # COMMAND ----------
@@ -42,8 +43,8 @@ def clean(raw):
         .withColumn("transaction_date", F.to_date("timestamp"))
         .withColumn("transaction_hour", F.hour("timestamp"))
         .withColumn("unit_price", F.col("price"))
-        .select("transaction_id", "customer_id", "product_id", 
-                "quantity", "unit_price", "total_amount", 
+        .select("transaction_id", "customer_id", "product_id",
+                "quantity", "unit_price", "total_amount",
                 "transaction_date", "transaction_hour")
     )
 
