@@ -165,7 +165,8 @@ class ETL:
 
     def load(self, *transformed: DataFrame):
         """ Load the transformed data into the target system. """
-        assert len(transformed) == len(self.outputs), "Number of transformed dataframes must match number of outputs"
+        if len(transformed) != len(self.outputs):
+            raise RuntimeError("Number of transformed dataframes must match number of outputs")
         for df, out in zip(transformed, self.outputs):
             out.load(df)
 
@@ -191,7 +192,9 @@ class ETL:
             if i.schema is None:
                 raise RuntimeError("No schema defined for input and the validate_schemas parameter is set to True."
                                    " To suppress this set the validate_schemas parameter to False.")
-            assert schemas.is_subset(i.schema, df.schema)
+            if not schemas.is_subset(i.schema, df.schema):
+                raise RuntimeError("Input schema did not match expectations "
+                                   f"expected: {i.schema}, actual: {df.schema}")
 
     def verify_output_schemas(self, data: tuple[DataFrame, ...]):
         """ Verify that the output schema matches the expected schema. """
@@ -199,7 +202,9 @@ class ETL:
             if o.schema is None:
                 raise RuntimeError("No schema defined for output and the validate_schemas parameter is set to True."
                                    " To suppress this set the validate_schemas parameter to False.")
-            assert schemas.are_equal(o.schema, df.schema)
+            if not schemas.are_equal(o.schema, df.schema):
+                raise RuntimeError("Output schema did not match expectations "
+                                   f"expected: {o.schema}, actual: {df.schema}")
 
 def etl(inputs: list[Input], outputs: list[Output], validate_schemas: bool = True):
     """ Decorator to run the ETL process. """
