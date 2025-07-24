@@ -33,7 +33,7 @@ class MemoryInput(Input):
 
     def extract(self):
         return spark.createDataFrame([  # noqa: F821
-            ("1", "Jhon Doe", "jhon.doe@mail.com", 30, "New York", date(2022, 1, 1)),
+            ("1", "John Doe", "jhon.doe@mail.com", 30, "New York", date(2022, 1, 1)),
             ("2", "Jane Doe", "jane.doe@mail.com", 25, "Los Angeles", date(2022, 1, 1)),
             ("3", "Mike Smith", "mike.smith@mail.com", 40, "Chicago", date(2022, 1, 1)),
             ("4", "Sara Johnson", "sara.johnson@mail.com", 35, "Houston", date(2022, 1, 1)),
