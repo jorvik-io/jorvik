@@ -44,10 +44,10 @@ class MemoryInput(Input):
 # COMMAND ----------
 
 @etl(inputs=MemoryInput(), outputs=result)
-def ingest_customers(df):
+def ingest(df):
     return df
 
 # COMMAND ----------
 
 if __name__ == "__main__":
-    ingest_customers()
+    ingest()
