@@ -5,7 +5,7 @@ resources:
       tasks:
         - task_key: Ingest_Customers
           notebook_task:
-            notebook_path: examples/databricks/bronze/nb_ingest_raw_customers
+            notebook_path: examples/databricks/transactions/bronze/nb_ingest_raw_customers
             source: GIT
           job_cluster_key: Job_cluster
         - task_key: Ingest_Transactions
