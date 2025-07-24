@@ -26,6 +26,9 @@ jobs:
     - name: Spell check code
       run: |
         npx cspell lint jorvik --quiet
+    - name: Spell check examples
+      run: |
+        npx cspell lint examples --quiet
     - name: Install package
       run: |
           python -m pip install --upgrade pip
@@ -35,6 +38,9 @@ jobs:
       run: |
         pytest --cov=. test -m 'not data_lineage' --cov-report=xml
         pytest --cov=. test -m 'data_lineage' --cov-report=xml --cov-append
+    - name: Run Transaction Examples tests
+      run: |
+        pytest --cov=. examples/databricks/transactions/tests --cov-report=xml --cov-append
     - name: Upload coverage to Coveralls
       uses: coverallsapp/github-action@v2
       with:
