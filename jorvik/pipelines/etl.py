@@ -193,8 +193,10 @@ class ETL:
                 raise RuntimeError("No schema defined for input and the validate_schemas parameter is set to True."
                                    " To suppress this set the validate_schemas parameter to False.")
             if not schemas.is_subset(i.schema, df.schema):
-                raise RuntimeError("Input schema did not match expectations "
-                                   f"expected: {i.schema}, actual: {df.schema}")
+                expected = "\n".join(map(str, i.schema.fields))
+                actual = "\n".join(map(str, df.schema.fields))
+                raise RuntimeError("Input schema did not match expectations"
+                                   f"\nexpected: \n{expected} \n\nactual: \n{actual}")
 
     def verify_output_schemas(self, data: tuple[DataFrame, ...]):
         """ Verify that the output schema matches the expected schema. """
@@ -203,8 +205,10 @@ class ETL:
                 raise RuntimeError("No schema defined for output and the validate_schemas parameter is set to True."
                                    " To suppress this set the validate_schemas parameter to False.")
             if not schemas.are_equal(o.schema, df.schema):
-                raise RuntimeError("Output schema did not match expectations "
-                                   f"expected: {o.schema}, actual: {df.schema}")
+                expected = "\n".join(map(str, o.schema.fields))
+                actual = "\n".join(map(str, df.schema.fields))
+                raise RuntimeError("Output schema did not match expectations"
+                                   f"\nexpected: \n{expected} \n\nactual: \n{actual}")
 
 def etl(inputs: list[Input], outputs: list[Output], validate_schemas: bool = True):
     """ Decorator to run the ETL process. """

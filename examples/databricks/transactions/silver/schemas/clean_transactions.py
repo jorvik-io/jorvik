@@ -1,4 +1,4 @@
-from pyspark.sql.types import StructType, StructField, StringType, IntegerType, DateType, DoubleType, FloatType
+from pyspark.sql.types import StructType, StructField, StringType, IntegerType, DateType, FloatType
 
 
 schema = schema = StructType(
@@ -8,7 +8,7 @@ schema = schema = StructType(
         StructField("product_id", StringType(), False),
         StructField("quantity", IntegerType(), True),
         StructField("unit_price", FloatType(), True),
-        StructField("total_amount", DoubleType(), True),
+        StructField("total_amount", FloatType(), True),
         StructField("transaction_date", DateType(), True),
         StructField("transaction_hour", IntegerType(), True)
     ])
