@@ -6,6 +6,6 @@
         "pyspark",
         "pytest",
         "sparkoperator",
-        "pullkey"
+        "jorvikpullkey"
     ]
 }
