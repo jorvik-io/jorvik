@@ -3,7 +3,7 @@ from datetime import date
 from pyspark.sql import SparkSession
 
 
-spark = SparkSession.getActiveSession()
+spark = SparkSession.builder.appName("Jorvik test").getOrCreate()
 
 spark.createDataFrame(  # noqa: F821
     [
