@@ -115,7 +115,7 @@ def simple_join_without_schemas():
 
     out = FileOutput(path="/tmp/simple_join/out", format="delta", mode="overwrite")
 
-    @etl(inputs=[first, second], outputs=[out])
+    @etl(inputs=[first, second], outputs=[out], validate_schemas=False)
     def transform(first: DataFrame, second: DataFrame):
         return first.join(second, on=["id"], how="inner")
 
@@ -127,7 +127,7 @@ def merge_delta():
     in_df = FileInput(path="/tmp/merge/in_df", format="delta")
     out = MergeDeltaOutput(path="/tmp/merge/out", merge_condition="full.id = incremental.id")
 
-    @etl(inputs=[in_df], outputs=[out])
+    @etl(inputs=[in_df], outputs=[out], validate_schemas=False)
     def transform(df: DataFrame):
         """ Adds a new row (id = 4), update a row ( id = 3) and drop a row ( id = 1 ). """
         spark = SparkSession.getActiveSession()
