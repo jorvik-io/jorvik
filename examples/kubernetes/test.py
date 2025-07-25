@@ -1,5 +1,10 @@
 from datetime import date
 
+from pyspark.sql import SparkSession
+
+
+spark = SparkSession.getActiveSession()
+
 spark.createDataFrame(  # noqa: F821
     [
         ("1", "John Doe", "jhon.doe@mail.com", 30, "New York", date(2022, 1, 1)),

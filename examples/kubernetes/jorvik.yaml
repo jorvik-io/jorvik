@@ -19,7 +19,7 @@ spec:
   imagePullSecrets:
     - jorvikpullkey
   mainApplicationFile: local:///app/examples/kubernetes/test.py
-  sparkVersion: 3.5.3
+  sparkVersion: 4.0.0
   driver:
     cores: 1
     memory: 512m
