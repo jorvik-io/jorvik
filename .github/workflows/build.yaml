@@ -46,3 +46,15 @@ jobs:
       with:
         format: cobertura
         file: coverage.xml
+    - name: Login to Container Registry
+      uses: docker/login-action@v1
+      with:
+        registry: jorvik.azurecr.io
+        username: ${{ secrets.docker_username }}
+        password: ${{ secrets.docker_password }}
+    - name: Build image
+      run: |
+        docker build -t jorvik.azurecr.io/jorvik:latest . 
+    - name: Push image
+      run: |
+        docker push jorvik.azurecr.io/jorvik:latest
