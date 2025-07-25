@@ -4,6 +4,8 @@
         "jorvik",
         "noqa",
         "pyspark",
-        "pytest"
+        "pytest",
+        "sparkoperator",
+        "pullkey"
     ]
 }
