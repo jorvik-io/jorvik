@@ -33,7 +33,7 @@ setuptools.setup(
     license="Apache License 2.0",
     long_description_content_type="text/markdown",
     install_requires=REQUIRE,
-    extras_require={'tests': ['pytest', 'flake8', 'pytest-mock', 'numpy<2.0.0']},
+    extras_require={'tests': ['pytest', 'flake8', 'pytest-mock', 'numpy<2.0.0', 'ipykernel']},
     data_files=[('', ['requirements.txt'])],
     packages=setuptools.find_packages(''),
 )
