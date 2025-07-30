@@ -1,6 +1,7 @@
 from typing import Callable
 import datetime
 import re
+import os
 
 from pyspark.sql import DataFrame, SparkSession, functions as F
 from pyspark.sql.streaming import StreamingQuery
@@ -50,7 +51,7 @@ class IsolatedStorage():
         isolation_folder = spark.conf.get("io.jorvik.storage.isolation_folder") or ""
         isolation_context = self.isolation_provider() or ""
 
-        iso_sub_path = "/".join([isolation_folder, isolation_context + "/"])
+        iso_sub_path = os.path.join(isolation_folder, isolation_context) + "/"
 
         # Replace the mount point with the isolation folder and context
         full_isolation_path = path.replace(mount_point, mount_point + iso_sub_path)
@@ -317,6 +318,9 @@ class IsolatedStorage():
 
         if self.exists(isolation_path):
             path = isolation_path
+
+        if self.verbose:
+            self._verbose_output(path, "Merging")
 
         self.storage.merge(
             df,
