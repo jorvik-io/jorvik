@@ -14,7 +14,7 @@ st.write(df, "/new/path/to/table", format="parquet", mode="overwrite")
 ### Isolated storage
 ```python
 from jorvik import storage
-st = storage.configure(isolation_provider.databricks.get_active_branch(), verbose=True, track_lineage=True)
+st = storage.configure(isolation_provider.databricks.get_active_branch, verbose=True, track_lineage=True)
 df = st.read("/mnt/path/to/table/", format="delta")
 st.write(df, "/mnt/path/to/table", format="delta", mode="overwrite")
 ```
@@ -25,7 +25,7 @@ To configure Spark configuration keys for Isolated Storage update the below keys
 | --------                                  | -------       |----------- |
 | `io.jorvik.storage.isolation_folder`      | `str: = None`          | True |
 | `io.jorvik.storage.mount_point`           | `str: = mnt`         | False |           
-| `io.jorvik.storage.production_context`    | `list[str]: = ['main', 'master', 'production', 'prod']` | False |
+| `io.jorvik.storage.production_context`    | `'main, master, production, prod']` | False |
 
 Configure the Isolated Storage by setting Spark configuration key `io.jorvik.storage.isolation_folder` to the name of a folder where isolated data should be written to. 
 
