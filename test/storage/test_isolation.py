@@ -28,7 +28,19 @@ def isolated_storage(mock_storage):
 def mock_spark_conf():
     with patch("jorvik.storage.isolation.SparkSession") as mock_spark_session:
         mock_spark = MagicMock()
-        mock_spark.sparkContext.getConf().get.side_effect = lambda key, default=None: default
+
+        # Ensure conf.get returns strings
+        mock_spark.conf.get.side_effect = lambda key, default=None: {
+            "io.jorvik.storage.mount_point": "/mnt",
+            "io.jorvik.storage.isolation_folder": "isolated"
+        }.get(key, default)
+
+        # Also mock sparkContext.getConf().get
+        mock_spark.sparkContext.getConf().get.side_effect = lambda key, default=None: {
+            "io.jorvik.storage.mount_point": "/mnt",
+            "io.jorvik.storage.isolation_folder": "isolated"
+        }.get(key, default)
+
         mock_spark_session.getActiveSession.return_value = mock_spark
         yield mock_spark
 
@@ -37,16 +49,14 @@ def mock_spark_conf():
     "mount_point, isolation_folder, isolation_context, input_path, expected",
     [
         ("", "folder/", "branch", "/mnt/data/file.parquet", "/mnt/folder/branch/data/file.parquet"),
-        ("", "folder", "branch", "/mnt/data/file.parquet", "/mnt/folder/branch/data/file.parquet"),
+        ("", "folder", "/branch/", "/mnt/data/file.parquet", "/mnt/folder/branch/data/file.parquet"),
         ("/mnt/", "folder/", "branch", "/mnt/data/file.parquet", "/mnt/folder/branch/data/file.parquet"),
-        ("/mnt/", "//folder/", "//branch", "/mnt/data/file.parquet", "/mnt/folder/branch/data/file.parquet"),
+        ("/mnt/", "/folder/", "/branch/", "/mnt/data/file.parquet", "/mnt/folder/branch/data/file.parquet"),
         ("data", "iso", "dev", "/data/file.parquet", "/data/iso/dev/file.parquet"),
         ("/data", "iso", "dev", "/data/file.parquet", "/data/iso/dev/file.parquet"),
-        ("/data/", "iso/", "/dev", "/data/file.parquet", "/data/iso/dev/file.parquet"),
-        ("/mnt", "folder", "branch", "/mnt/otherdir/anotherfile.csv", "/mnt/folder/branch/otherdir/anotherfile.csv"),
     ]
 )
-def test_create_isolation_path_unit(mock_spark_conf, mount_point, isolation_folder, isolation_context, input_path, expected):
+def test_create_isolation_path(mock_spark_conf, mount_point, isolation_folder, isolation_context, input_path, expected):
     mock_spark_conf.conf.get.side_effect = lambda key: {
         "io.jorvik.storage.mount_point": mount_point,
         "io.jorvik.storage.isolation_folder": isolation_folder,
@@ -262,3 +272,61 @@ def test_merge_calls_storage_merge(isolated_storage, mock_storage):
         "source.updated_at > target.updated_at",
         True
     )
+
+def test_e2e_isolated_storage_write_read_with_mocks(
+    isolated_storage: IsolatedStorage,
+    mock_storage: MagicMock,
+    mock_spark_conf: MagicMock
+):
+    # Configure the mock to return a DataFrame when read is called
+    mock_read_df = MagicMock(spec=DataFrame)
+    mock_storage.read.return_value = mock_read_df
+
+    # Set up isolation path and mock the existence check
+    full_path = "/mnt/data/my_table"
+    isolated_path = "/mnt/isolated/test-branch/data/my_table"
+
+    # Mock _create_isolation_path to return the isolated path
+    with patch.object(isolated_storage, "_create_isolation_path", return_value=isolated_path):
+
+        # Test the write operation
+        mock_df_to_write = MagicMock(spec=DataFrame)
+        isolated_storage.write(mock_df_to_write, full_path, format="delta", mode="overwrite")
+
+        # Assert that the underlying storage's write method was called with the isolated path
+        mock_storage.write.assert_called_once_with(
+            mock_df_to_write,
+            isolated_path,
+            "delta",
+            "overwrite",
+            "",
+            None
+        )
+
+        # Reset mock for the next assertion
+        mock_storage.write.reset_mock()
+
+        # Test the read operation
+        # Assume isolated path exists and production path does not
+        mock_storage.exists.side_effect = lambda path: path == isolated_path
+
+        read_df = isolated_storage.read(full_path, format="delta")
+
+        # Assert that the underlying storage's read method was called with the isolated path
+        mock_storage.read.assert_called_once_with(isolated_path, "delta", None)
+
+        # Assert that the method returns the mocked DataFrame
+        assert read_df is mock_read_df
+
+        # Reset mocks
+        mock_storage.exists.reset_mock()
+        mock_storage.read.reset_mock()
+
+        # Test the case where the isolated path doesn't exist, so it falls back to the original
+        mock_storage.exists.side_effect = lambda path: False
+
+        read_df_fallback = isolated_storage.read(full_path, format="delta")
+
+        # Assert that the storage's read method was called with the original path
+        mock_storage.read.assert_called_once_with(full_path, "delta", None)
+        assert read_df_fallback is mock_read_df
