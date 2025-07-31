@@ -40,7 +40,10 @@ class IsolatedStorage():
         """
         spark = SparkSession.getActiveSession()
 
-        mount_point = spark.conf.get("io.jorvik.storage.mount_point") or "/mnt"
+        if not spark.conf.get("io.jorvik.storage.mount_point", None):
+            mount_point = "/mnt"
+        else:
+            mount_point = spark.conf.get("io.jorvik.storage.mount_point")
 
         if not mount_point.endswith("/"):
             mount_point = mount_point + "/"
@@ -145,7 +148,10 @@ class IsolatedStorage():
         if path.endswith("/"):
             path = path[:-1]
 
-        mount_point = spark.conf.get("io.jorvik.storage.mount_point") or ""
+        if not spark.conf.get("io.jorvik.storage.mount_point", None):
+            mount_point = "/mnt"
+        else:
+            mount_point = spark.conf.get("io.jorvik.storage.mount_point")
 
         parts = path.split("/")
         parts = [p for p in parts if p not in ("", "mnt", "dbfs", mount_point)]
