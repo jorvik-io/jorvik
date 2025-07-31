@@ -28,13 +28,14 @@ def get_dbutils() -> Any:
     spark = get_spark()
     client_config = spark.conf.get("spark.databricks.service.client.enabled", None)
 
-    if client_config == "true":
-        from pyspark.dbutils import DBUtils  # type:ignore
-        return DBUtils.SparkServiceClientDBUtils(spark.sparkContext)
-    elif client_config == "false":
-        import IPython  # type: ignore
-        return IPython.get_ipython().user_ns["dbutils"]  # type:ignore
-    else:
+    try:
+        if client_config == "true":
+            from pyspark.dbutils import DBUtils  # type:ignore
+            return DBUtils.SparkServiceClientDBUtils(spark.sparkContext)
+        else:
+            import IPython  # type: ignore
+            return IPython.get_ipython().user_ns["dbutils"]  # type:ignore
+    except Exception:
         raise DatabricksUtilsError("Could not determine the dbutils client configuration")
 
 def get_notebook_context() -> dict:
