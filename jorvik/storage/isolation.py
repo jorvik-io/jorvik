@@ -48,8 +48,8 @@ class IsolatedStorage():
         if not mount_point.startswith("/"):
             mount_point = "/" + mount_point
 
-        isolation_folder = spark.conf.get("io.jorvik.storage.isolation_folder") or ""
-        isolation_context = self.isolation_provider() or ""
+        isolation_folder = spark.conf.get("io.jorvik.storage.isolation_folder").strip("/") or ""
+        isolation_context = self.isolation_provider().strip("/") or ""
 
         iso_sub_path = os.path.join(isolation_folder, isolation_context) + "/"
 
