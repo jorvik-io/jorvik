@@ -78,7 +78,7 @@ To configure Spark configuration keys for Isolated Storage update the below keys
 | --------                                  | -------       |----------- |
 | `io.jorvik.storage.isolation_folder`      | `str: = None`          | True |
 | `io.jorvik.storage.mount_point`           | `str: = mnt`         | False |           
-| `io.jorvik.storage.production_context`    | `'main, master, production, prod'` | False |
+| `io.jorvik.storage.production_context`    | `'main,master,production,prod'` | False |
 
 Configure the Isolated Storage by setting Spark configuration key `io.jorvik.storage.isolation_folder` to the name of a folder where isolated data should be written to. 
 
