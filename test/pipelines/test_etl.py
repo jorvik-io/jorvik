@@ -81,7 +81,7 @@ def test_etl_with_incorrect_schemas_fail(spark: SparkSession, incorrect_schema):
     st.write(first, "/tmp/simple_join/first", format="delta", mode="overwrite")
     st.write(second, "/tmp/simple_join/second", format="delta", mode="overwrite")
 
-    with pytest.raises(AssertionError):
+    with pytest.raises(RuntimeError):
         incorrect_schema.run()
 
 def test_etl_with_incorrect_schemas_can_succeed(spark: SparkSession, incorrect_schema_skip_schema_verification):  # noqa: F811
