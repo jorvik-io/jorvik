@@ -116,8 +116,8 @@ class IsolatedStorage():
             time_difference = datetime.datetime.now() - update_ts
             total_seconds = time_difference.total_seconds()
             days = time_difference.days
-            hours = (total_seconds // 3600) % 24
-            minutes = (total_seconds // 60) % 60
+            hours = int(total_seconds // 3600) % 24
+            minutes = int(total_seconds // 60) % 60
 
             print(f"Table was last updated: {days} days, {hours} hours, {minutes} minutes ago.\n")
         else:
@@ -199,13 +199,12 @@ class IsolatedStorage():
         Check if the data exists in the isolated path.
 
         Args:
-            path (str): The original storage path.
+            path (str): The storage path.
 
         Returns:
             bool: True if the data exists, False otherwise.
         """
-        isolation_path = self._create_isolation_path(path)
-        return self.storage.exists(isolation_path)
+        return self.storage.exists(path)
 
     def read(self, path: str, format: str, options: dict = None) -> DataFrame:
         """
@@ -269,7 +268,7 @@ class IsolatedStorage():
         configured_path = self._remove_isolation_path(path)
 
         if self.verbose:
-            self._verbose_output(configured_path, "Reading")
+            self._verbose_output(configured_path, "Reading", format=format)
 
         return self.storage.read(configured_path, format=format, options=options)
 
@@ -289,7 +288,7 @@ class IsolatedStorage():
         isolation_path = self._create_isolation_path(path)
 
         if self.verbose:
-            self._verbose_output(path, "Writing")
+            self._verbose_output(path, "Writing", format=format)
 
         self.storage.write(df, isolation_path, format, mode, partition_fields, options)
 
@@ -313,7 +312,7 @@ class IsolatedStorage():
         isolation_path = self._create_isolation_path(path)
 
         if self.verbose:
-            self._verbose_output(path, "Writing")
+            self._verbose_output(path, "Writing", format=format)
 
         return self.storage.writeStream(df, isolation_path, format, checkpoint, partition_fields, options)
 
@@ -326,7 +325,7 @@ class IsolatedStorage():
             path = isolation_path
 
         if self.verbose:
-            self._verbose_output(path, "Merging")
+            self._verbose_output(path, "Merging", format="delta")
 
         self.storage.merge(
             df,
