@@ -153,7 +153,7 @@ def test_verbose_print_last_updated(mock_spark_conf, capfd):
         storage._verbose_print_last_updated(test_path)
 
         out, _ = capfd.readouterr()
-        assert "Table was last updated: 2 days, 5.0 hours, 13.0 minutes ago." in out
+        assert "Table was last updated: 2 days, 5 hours, 13 minutes ago." in out
 
         mock_selected_df.collect.return_value = [[None]]
         storage._verbose_print_last_updated(test_path)
@@ -189,15 +189,13 @@ def test_verbose_output_skips_last_updated_when_not_reading_merging_delta(
     mock_last_updated.assert_not_called()
 
 
-def test_exists_calls_storage_with_isolated_path():
-    mock_storage = MagicMock()
+def test_exists_calls_storage_with_direct_path(isolated_storage, mock_storage):
     mock_storage.exists.return_value = True
-    storage = IsolatedStorage(storage=mock_storage, isolation_provider=lambda: "branch")
 
-    with patch.object(storage, "_create_isolation_path", return_value="/mnt/isolated/data/table"):
-        assert storage.exists("/mnt/data/table") is True
+    result = isolated_storage.exists("/mnt/data/table")
 
-    mock_storage.exists.assert_called_once_with("/mnt/isolated/data/table")
+    assert result is True
+    mock_storage.exists.assert_called_once_with("/mnt/data/table")
 
 
 def test_read_prefers_isolated_path_if_exists(isolated_storage, mock_storage):
