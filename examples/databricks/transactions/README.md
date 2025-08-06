@@ -8,7 +8,7 @@ graph LR;
   nb_ingest_raw_customers --> nb_create_customer_summary
 ```
 
-In the heart of the example is the `etl` decorator. A lot of repeated work has been abstracted out and the developer needs to only specify the schemas for input and output data and the transformations that need to be applied to them. Behind the scenes it will verify that the input and output have the expected schema and it will fail the pipeline if they do not. This behavior can be turned off by supplying the validate_schemas=False parameter. It is though recommended to keep it on, as silent schema changes can negatively affect your data quality.
+In the heart of the example is the `etl` decorator. A lot of repeated work has been abstracted out and the developer needs to only specify the schemas for input and output data and the transformations that need to be applied to them. Behind the scenes it will verify that the input and output have the expected schema and it will fail the pipeline if they do not. This behavior can be turned off by supplying the `validate_schemas=False` parameter. It is though recommended to keep it on, as silent schema changes can negatively affect your data quality.
 
 The example also follows a few more guidelines to help navigating the source code and link datasets with the notebooks producing them.
 - All notebooks start with the `nb_` prefix
