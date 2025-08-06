@@ -4,10 +4,11 @@ This module contains the Observer class to track data lineage of Spark DataFrame
 
 from typing import List
 from datetime import datetime
-from jorvik.data_lineage import execution_plan, node_handler
 import signal
 from pyspark.sql import DataFrame, SparkSession
 from pyspark.sql.types import ArrayType, StructField, StructType, StringType, TimestampType
+from jorvik.data_lineage import execution_plan, node_handler
+from jorvik.utils import paths
 
 # cSpell: words signum, SIGALRM
 
@@ -78,19 +79,18 @@ class DataLineageLogger:
             data_sources.append(source_location)
         return data_sources
 
-    def _create_lineage_log(self, data_sources: List[str], output_path: str) -> DataFrame:
+    def _create_lineage_log(self, data_sources: List[str], output_path: str, code_file_path: str) -> DataFrame:
         '''
         Create a data lineage log entry with the output path, data sources, and observation timestamp.
         '''
         observation_ts = datetime.now()
         schema = StructType([StructField('output_path', StringType(), True),
                              StructField('data_sources', ArrayType(StringType(), True), True),
-                             # Placeholder for path of code file that creates the DataFrame, such as notebook path
-                             # StructField('codefile_path', StringType(), True),
+                             StructField('transform_code_file', StringType(), True),
                              StructField('observation_ts', TimestampType(), True)
                              ])
         spark = SparkSession.getActiveSession()
-        return spark.createDataFrame(data=[[output_path, data_sources, observation_ts]], schema=schema)
+        return spark.createDataFrame(data=[[output_path, data_sources, code_file_path, observation_ts]], schema=schema)
 
     def _store_lineage_log(self, lineage_log: DataFrame) -> None:
         '''Store lineage log entry to log path.'''
@@ -100,5 +100,6 @@ class DataLineageLogger:
 
     def update(self, df: DataFrame, output_path: str) -> None:
         data_sources = self._get_data_sources(df)
-        lineage_log = self._create_lineage_log(data_sources, output_path)
+        code_file_path = paths.get_codefile_path()
+        lineage_log = self._create_lineage_log(data_sources, output_path, code_file_path)
         self._store_lineage_log(lineage_log)

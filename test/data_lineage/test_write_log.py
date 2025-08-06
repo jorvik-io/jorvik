@@ -1,6 +1,6 @@
 import pytest
 from jorvik import storage
-from pyspark.sql import SparkSession
+from pyspark.sql import SparkSession, functions as F
 from pyspark.sql.types import StructType, StructField, StringType, ArrayType, TimestampType
 
 from fixtures.data_lineage import spark, LINEAGE_LOG_PATH  # noqa: F401 F403
@@ -8,6 +8,7 @@ from fixtures.data_lineage import spark, LINEAGE_LOG_PATH  # noqa: F401 F403
 
 LINEAGE_LOG_SCHEMA = StructType([StructField('output_path', StringType(), True),
                                  StructField('data_sources', ArrayType(StringType(), True), True),
+                                 StructField('transform_code_file', StringType(), True),
                                  StructField('observation_ts', TimestampType(), True)])
 
 
@@ -27,7 +28,9 @@ def test_write_lineage_log(spark: SparkSession):  # noqa: F811
     st = storage.configure()
     output_path = "/tmp/sample_data"
     st.write(df, output_path, format="delta", mode="overwrite")
-    lineage_log = st.read(LINEAGE_LOG_PATH, format="delta")
+    lineage_log = (st.read(LINEAGE_LOG_PATH, format="delta")
+                   .orderBy(F.desc("observation_ts"))
+                   .limit(1))
 
     assert lineage_log.schema == LINEAGE_LOG_SCHEMA, "Lineage log schema does not match expected schema."
 
@@ -36,3 +39,6 @@ def test_write_lineage_log(spark: SparkSession):  # noqa: F811
 
     data_source_log = lineage_log.select("data_sources").collect()[0][0][0]
     assert data_source_log == "memory_scan: Scan ExistingRDD", "Data source in lineage log does not match expected data source"
+
+    transform_code_file_log = lineage_log.select("transform_code_file").collect()[0][0]
+    assert 'test_write_log.py' in transform_code_file_log, "Transform code file in lineage log does not match expected code file"  # noqa: E501

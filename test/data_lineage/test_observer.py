@@ -33,7 +33,7 @@ def test_get_data_sources_timeout(spark: SparkSession) -> None:  # noqa: F811
 
 
 @pytest.mark.data_lineage
-def test_create_lineage_log() -> None:
+def test_create_lineage_log(spark: SparkSession) -> None:
     lineage_log_path = "/path/to/logs"
     logger = observer.DataLineageLogger(lineage_log_path=lineage_log_path)
 
@@ -42,6 +42,7 @@ def test_create_lineage_log() -> None:
         'dbfs:/mnt/bronze/adventure_works/sales/data',
         'memory_scan: Scan ExistingRDD'
     ]
+    code_file_path = "/path/to/codefile.py"
 
-    lineage_log = logger._create_lineage_log(data_sources, output_path)
-    assert set(lineage_log.columns) == {'output_path', 'data_sources', 'observation_ts'}
+    lineage_log = logger._create_lineage_log(data_sources, output_path, code_file_path)
+    assert set(lineage_log.columns) == {'output_path', 'data_sources', 'transform_code_file', 'observation_ts'}
