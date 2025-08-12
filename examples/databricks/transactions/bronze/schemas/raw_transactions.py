@@ -10,5 +10,5 @@ schema = StructType(
         StructField("price", FloatType(), True),
         StructField("timestamp", TimestampType(), True)
     ])
-path="/mnt/bronze/raw_transactions/data"
-format="delta"
+path = "/mnt/bronze/raw_transactions/data"
+format = "delta"
