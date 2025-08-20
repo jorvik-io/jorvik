@@ -7,6 +7,6 @@
         "pytest",
         "isin",
         "dbfs",
-        "featureisolation"
+        "Pypi"
     ]
 }

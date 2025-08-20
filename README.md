@@ -12,7 +12,7 @@ Writing code isn’t the only way to contribute. You can also:
 
 - review pull requests
 - suggest improvements through issues
-- let us know your painpoints and repeatitive tasks
+- let us know your pain-points and repetitive tasks
 - help us stay on top of new and old issues
 - develop tutorials, videos, presentations, and other educational materials
 
@@ -25,7 +25,13 @@ Jorvik is available in Pypi and can be installed with pip
 pip install jorvik
 ```
 
-Packages:
+### Packages:
 - [Storage](https://github.com/jorvik-io/jorvik/blob/main/jorvik/storage/README.md): Interact with the storage layer
 - [Pipelines](https://github.com/jorvik-io/jorvik/blob/main/jorvik/pipelines/README.md): Build and test etl pipelines with ease
 - [Data Lineage](https://github.com/jorvik-io/jorvik/blob/main/jorvik/data_lineage/README.md): Track data lineage
+
+### Examples:
+See the full power of jorvik when all the features come together in the examples bellow:
+#### Databricks
+
+- [Transactions](https://github.com/jorvik-io/jorvik/blob/main/examples/databricks/transactions/README.md): A multi step pipeline that creates customer statistics from customers and transaction data.

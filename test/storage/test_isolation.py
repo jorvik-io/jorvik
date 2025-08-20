@@ -44,7 +44,6 @@ def mock_spark_conf():
         mock_spark_session.getActiveSession.return_value = mock_spark
         yield mock_spark
 
-
 @pytest.mark.parametrize(
     "mount_point, isolation_folder, isolation_context, input_path, expected",
     [
@@ -57,13 +56,14 @@ def mock_spark_conf():
     ]
 )
 def test_create_isolation_path(mock_spark_conf, mount_point, isolation_folder, isolation_context, input_path, expected):
-    mock_spark_conf.conf.get.side_effect = lambda key, default=None: {
-        "io.jorvik.storage.mount_point": mount_point,
-        "io.jorvik.storage.isolation_folder": isolation_folder,
-    }.get(key, default)
+    with patch("jorvik.storage.BasicStorage.exists"):
+        mock_spark_conf.conf.get.side_effect = lambda key, default=None: {
+            "io.jorvik.storage.mount_point": mount_point,
+            "io.jorvik.storage.isolation_folder": isolation_folder,
+        }.get(key, default)
 
-    storage = IsolatedStorage(storage=BasicStorage(), isolation_provider=lambda: isolation_context)
-    assert storage._create_isolation_path(input_path) == expected
+        storage = IsolatedStorage(storage=BasicStorage(), isolation_provider=lambda: isolation_context)
+        assert storage._create_isolation_path(input_path) == expected
 
 
 @pytest.mark.parametrize(
