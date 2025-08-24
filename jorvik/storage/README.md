@@ -93,10 +93,10 @@ If your mount point is not named `mnt`. Set `io.jorvik.storage.mount_point` to y
 Working example:
 
 * Working in Databricks on a checked out branch named `feature-branch`
-* isolation_folder is set to "featureisolation" through `spark.conf.set("io.jorvik.storage.isolation_folder", "featureisolation")`
+* isolation_folder is set to "isolation" through `spark.conf.set("io.jorvik.storage.isolation_folder", "isolation")`
 * data path: `/mnt/prod_storage/silver/foo/bar`
 
-The isolated path will be configured to `/mnt/featureisolation/feature-branch/prod_storage/silver/foo/bar`
+The isolated path will be configured to `/mnt/isolation/feature-branch/prod_storage/silver/foo/bar`
 
 * st.write(df, data_path, format="delta", mode="overwrite") will always write to the configured path.
 * st.read(df, data_path, format="delta") will read from the configured path if it exists. Else the regular path.

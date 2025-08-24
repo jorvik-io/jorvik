@@ -40,24 +40,23 @@ class IsolatedStorage():
         """
         spark = SparkSession.getActiveSession()
 
-        if not spark.conf.get("io.jorvik.storage.mount_point", None):
+        mount_point = spark.conf.get("io.jorvik.storage.mount_point", "").rstrip("/")
+        if not mount_point:
             mount_point = "/mnt"
-        else:
-            mount_point = spark.conf.get("io.jorvik.storage.mount_point")
-
-        if not mount_point.endswith("/"):
-            mount_point = mount_point + "/"
 
         if not mount_point.startswith("/"):
             mount_point = "/" + mount_point
 
-        isolation_folder = spark.conf.get("io.jorvik.storage.isolation_folder").strip("/") or ""
+        isolation_folder = spark.conf.get("io.jorvik.storage.isolation_folder", "jorvik_isolation").strip("/") or ""
+        mounted_isolation_folder = os.path.join(mount_point, isolation_folder)
+        if not self.storage.exists(mounted_isolation_folder):
+            raise RuntimeError(f"Isolation folder: {mounted_isolation_folder} does not exist! Have you mounted it?")
         isolation_context = self.isolation_provider().strip("/") or ""
 
         iso_sub_path = os.path.join(isolation_folder, isolation_context) + "/"
 
         # Replace the mount point with the isolation folder and context
-        full_isolation_path = path.replace(mount_point, mount_point + iso_sub_path)
+        full_isolation_path = path.replace(mount_point, os.path.join(mount_point, iso_sub_path))
 
         # Ensure single slashes
         full_isolation_path = re.sub('/+', '/', full_isolation_path)
