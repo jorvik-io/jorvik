@@ -47,7 +47,7 @@ class IsolatedStorage():
         if not mount_point.startswith("/"):
             mount_point = "/" + mount_point
 
-        isolation_folder = spark.conf.get("io.jorvik.storage.isolation_folder", "isolation").strip("/") or ""
+        isolation_folder = spark.conf.get("io.jorvik.storage.isolation_folder", "jorvik_isolation").strip("/") or ""
         mounted_isolation_folder = os.path.join(mount_point, isolation_folder)
         if not self.storage.exists(mounted_isolation_folder):
             raise RuntimeError(f"Isolation folder: {mounted_isolation_folder} does not exist! Have you mounted it?")
