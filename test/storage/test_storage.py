@@ -13,7 +13,7 @@ def test_configure_with_isolation_provider(mocker: MockerFixture):
     spark.getActiveSession().conf = {}
 
     st = storage.configure(lambda: "my_feature")
-    assert st._create_isolation_path("/mnt/my_table/data") == "/mnt/isolation/my_feature/my_table/data"
+    assert st._create_isolation_path("/mnt/my_table/data") == "/mnt/jorvik_isolation/my_feature/my_table/data"
 
 
 def test_configure_no_arguments_no_config(mocker: MockerFixture):
