@@ -18,7 +18,7 @@ def test_configure_with_isolation_provider(mocker: MockerFixture):
 
 
 def test_configure_with_isolation_provider_but_on_main_branch(mocker: MockerFixture):
-    """ Setting Isolation Provider should be enough to configure Isolated Storage. """
+    """ Isolation Provider does not alter the path if the isolation context is in production context. """
     mocker.patch("jorvik.storage.BasicStorage.exists")
     mocker.patch("jorvik.storage.SparkSession")
     spark = mocker.patch("jorvik.storage.isolation.SparkSession")
