@@ -287,7 +287,7 @@ class IsolatedStorage():
         isolation_path = self._create_isolation_path(path)
 
         if self.verbose:
-            self._verbose_output(path, "Writing", format=format)
+            self._verbose_output(isolation_path, "Writing", format=format)
 
         self.storage.write(df, isolation_path, format, mode, partition_fields, options)
 
