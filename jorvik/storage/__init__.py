@@ -28,7 +28,6 @@ def configure(
     st = BasicStorage()
     conf = SparkSession.getActiveSession().sparkContext.getConf()
     lineage_log_path = conf.get('io.jorvik.data_lineage.log_path', '')
-    production_context = conf.get('io.jorvik.storage.production_context', 'main,master,production,prod').split(',')
 
     if track_lineage and lineage_log_path:
         st.register_output_observer(DataLineageLogger(lineage_log_path))
@@ -38,7 +37,7 @@ def configure(
         isolation_provider = get_isolation_provider()
 
     isolation = isolation_provider()
-    if isolation and isolation.lower() not in [p.strip().lower() for p in production_context]:
+    if isolation:
         return IsolatedStorage(st, verbose=verbose, isolation_provider=isolation_provider)
 
     return st

@@ -13,7 +13,20 @@ def test_configure_with_isolation_provider(mocker: MockerFixture):
     spark.getActiveSession().conf = {}
 
     st = storage.configure(lambda: "my_feature")
+    assert isinstance(st, IsolatedStorage)
     assert st._create_isolation_path("/mnt/my_table/data") == "/mnt/jorvik_isolation/my_feature/my_table/data"
+
+
+def test_configure_with_isolation_provider_but_on_main_branch(mocker: MockerFixture):
+    """ Setting Isolation Provider should be enough to configure Isolated Storage. """
+    mocker.patch("jorvik.storage.BasicStorage.exists")
+    mocker.patch("jorvik.storage.SparkSession")
+    spark = mocker.patch("jorvik.storage.isolation.SparkSession")
+    spark.getActiveSession().conf = {}
+
+    st = storage.configure(lambda: "main")
+    assert isinstance(st, IsolatedStorage)
+    assert st._create_isolation_path("/mnt/my_table/data") == "/mnt/my_table/data"
 
 
 def test_configure_no_arguments_no_config(mocker: MockerFixture):

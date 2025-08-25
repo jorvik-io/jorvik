@@ -52,6 +52,9 @@ class IsolatedStorage():
         if not self.storage.exists(mounted_isolation_folder):
             raise RuntimeError(f"Isolation folder: {mounted_isolation_folder} does not exist! Have you mounted it?")
         isolation_context = self.isolation_provider().strip("/") or ""
+        production_context = spark.conf.get('io.jorvik.storage.production_context', 'main,master,production,prod').split(',')
+        if isolation_context.lower() in [p.strip().lower() for p in production_context]:
+            return path
 
         iso_sub_path = os.path.join(isolation_folder, isolation_context) + "/"
 
