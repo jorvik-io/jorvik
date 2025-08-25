@@ -16,11 +16,20 @@ The example also follows a few more guidelines to help navigating the source cod
 - Code also follows the Medallion Architecture, placing every producer notebook in the same path as the produced dataset.
 - Dataset schemas are placed on python files in the schemas package so they can be reused.
 
-To run the pipeline in Databricks you can clone the repository in your Databricks workspace. In the "Jobs & Pipelines" page create a job, on the top right corner click the three dots and select edit as yaml, paste the contents of pipeline.yaml file and you are ready to go. The only prerequisite is to mount a cloud storage on the paths `/mount/bronze` and `/mount/silver`.
+## Prerequisites
+1. Run python file `/examples/sample_data_generator.py` to generate sample data.
+2. Mount a cloud storage on the paths `/mount/bronze` and `/mount/silver`.
 
+## Run sample ETL pipeline
+To run the pipeline in Databricks you can clone the repository in your Databricks workspace. In the "Jobs & Pipelines" page create a job, on the top right corner click the three dots and select edit as yaml, paste the contents of pipeline.yaml file and you are ready to go. 
+
+## Smoke test
 To run the tests clone the repository and simply run the following commands in the repository's root folder:
 ```bash
 pip install -r requirements.txt
 pip install pytest
 pytest examples/databricks/transactions/tests
 ```
+
+## Isolated storage in Dev environment
+Content to be added
