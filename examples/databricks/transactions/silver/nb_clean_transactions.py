@@ -32,6 +32,8 @@ clean = FileOutput(
     mode='overwrite'
 )
 
+SOME_CURRENCY_EXCHANGE_RATE = 20
+
 # COMMAND ----------
 
 @etl(raw, clean)
@@ -42,7 +44,7 @@ def clean(raw):
         .withColumn("total_amount", (F.col("quantity") * F.col("price")).cast('float'))
         .withColumn("transaction_date", F.to_date("timestamp"))
         .withColumn("transaction_hour", F.hour("timestamp"))
-        .withColumn("unit_price", F.col("price"))
+        .withColumn("unit_price", F.col("price") * SOME_CURRENCY_EXCHANGE_RATE)
         .select("transaction_id", "customer_id", "product_id",
                 "quantity", "unit_price", "total_amount",
                 "transaction_date", "transaction_hour")
