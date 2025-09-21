@@ -29,8 +29,9 @@ def calculate_statistics_per_customer(transactions: DataFrame) -> DataFrame:
             F.sum("total_amount").alias("total_spent"),
             F.avg("total_amount").alias("avg_transaction_value"),
             F.min("transaction_date").alias("first_purchase_date"),
-            F.max("transaction_date").alias("last_purchase_date")
-        ))
+            F.max("transaction_date").alias("last_purchase_date"),
+            F.mode("transaction_month_name").alias("most_active_month"))
+        )
 
 def create_segments(customers_with_statistics: DataFrame) -> DataFrame:
     return customers_with_statistics.withColumn(
@@ -44,7 +45,7 @@ def project_relevant_columns(customers_with_statistics: DataFrame) -> DataFrame:
     return (
         customers_with_statistics.select("customer_id", "name", "city", "total_transactions",
                                          "total_spent", "avg_transaction_value", "first_purchase_date",
-                                         "last_purchase_date", "customer_segment")
+                                         "last_purchase_date", "customer_segment", "most_active_month")
         .withColumnRenamed("name", "customer_name")
         .withColumnRenamed("city", "customer_city")
     )

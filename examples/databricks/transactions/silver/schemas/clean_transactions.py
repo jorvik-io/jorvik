@@ -10,7 +10,8 @@ schema = schema = StructType(
         StructField("unit_price", FloatType(), True),
         StructField("total_amount", FloatType(), True),
         StructField("transaction_date", DateType(), True),
-        StructField("transaction_hour", IntegerType(), True)
+        StructField("transaction_hour", IntegerType(), True),
+        StructField("transaction_month_name", StringType(), True)
     ])
 path = "/mnt/silver/clean_transactions/data"
 format = "delta"

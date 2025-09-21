@@ -10,7 +10,8 @@ schema=StructType([
     StructField("avg_transaction_value", DoubleType(), True),
     StructField("first_purchase_date", DateType(), True),
     StructField("last_purchase_date", DateType(), True),
-    StructField("customer_segment", StringType(), False)
+    StructField("customer_segment", StringType(), False),
+    StructField("most_active_month", StringType(), False)
 ])
 path="/mnt/silver/customer_summary/data"
 format="delta"
