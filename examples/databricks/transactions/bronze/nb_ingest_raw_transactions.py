@@ -2,7 +2,10 @@
 # MAGIC %md
 # MAGIC # Transactions Ingestion
 # MAGIC
-# MAGIC This notebook creates dummy transaction data for the purposes of the example.
+# MAGIC This notebook gets transaction data from sqlite database and stores as delta table.
+# MAGIC This notebook demonstrates how to inherit Input class to create a DatabaseInput.
+# MAGIC Sample data is generated to DBFS storage to simulate a production source.
+# MAGIC Modify data volume and location in `examples.sample_data_generator` as needed.
 # MAGIC In a realistic scenario this notebook would fetch data from a production system for example:
 # MAGIC - It could listen to an event topic and accumulate data in a Delta Table.
 # MAGIC - It could copy data from a transactional Database.
@@ -11,11 +14,14 @@
 
 # COMMAND ----------
 
-from datetime import datetime
-
+import pandas as pd
+import sqlite3
+from pyspark.sql import DataFrame, functions as F
+from pyspark.sql.types import IntegerType, FloatType
 from jorvik.pipelines import etl, Input, FileOutput
-
+from jorvik.utils import databricks
 from examples.databricks.transactions.bronze.schemas import raw_transactions
+from examples.sample_data_generator import generate_transactions, save_sqlite_to_dbfs
 
 # COMMAND ----------
 
@@ -28,32 +34,31 @@ result = FileOutput(
 
 # COMMAND ----------
 
-class MemoryInput(Input):
+def cast_data_types(df: DataFrame) -> DataFrame:
+    return (df
+            .withColumn("quantity", F.col("quantity").cast(IntegerType()))
+            .withColumn("price", F.col("price").cast(FloatType()))
+            )
+
+class DatabaseInput(Input):
     schema = raw_transactions.schema
 
     def extract(self):
-        return spark.createDataFrame([  # noqa: F821
-            ("1", "1", "1", 1, 11.0, datetime.fromisoformat("2022-01-01T00:00:00Z")),
-            ("2", "1", "2", 1, 12.0, datetime.fromisoformat("2022-01-02T00:00:00Z")),
-            ("3", "1", "3", 2, 13.0, datetime.fromisoformat("2022-01-03T00:00:00Z")),
-            ("4", "1", "4", 1, 14.0, datetime.fromisoformat("2022-01-04T00:00:00Z")),
-            ("5", "2", "1", 3, 11.0, datetime.fromisoformat("2022-01-05T00:00:00Z")),
-            ("6", "2", "1", -1, 11.0, datetime.fromisoformat("2022-01-06T00:00:00Z")),
-            ("7", "2", "1", 1, 11.0, datetime.fromisoformat("2022-01-07T00:00:00Z")),
-            ("8", "3", "2", 2, 12.0, datetime.fromisoformat("2022-01-08T00:00:00Z")),
-            ("9", "3", "2", 2, 12.0, datetime.fromisoformat("2022-01-09T00:00:00Z")),
-            ("10", "3", "2", 1, -12.0, datetime.fromisoformat("2022-01-10T00:00:00Z")),
-            ("11", "4", "4", 1, 14.0, datetime.fromisoformat("2022-01-11T00:00:00Z")),
-        ], schema=raw_transactions.schema)
-
+        db_path = '/dbfs/tmp/sources/transactions_db.sqlite'
+        sql = "SELECT * FROM transactions"
+        with sqlite3.connect(db_path) as conn:
+            transactions = pd.read_sql_query(sql, conn, parse_dates=['timestamp'])
+        transactions = databricks.get_spark().createDataFrame(transactions)
+        return cast_data_types(transactions)
 
 # COMMAND ----------
 
-@etl(inputs=MemoryInput(), outputs=result)
+@etl(inputs=DatabaseInput(), outputs=result)
 def ingest(df):
     return df
 
 # COMMAND ----------
 
 if __name__ == "__main__":
+    save_sqlite_to_dbfs(generate_transactions(), 'transactions_db')
     ingest()

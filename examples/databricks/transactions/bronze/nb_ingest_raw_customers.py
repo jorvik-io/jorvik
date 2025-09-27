@@ -2,7 +2,9 @@
 # MAGIC %md
 # MAGIC # Customers Ingestion
 # MAGIC
-# MAGIC This notebook creates dummy customer data for the purposes of the example.
+# MAGIC This notebook gets customer data from file input and stores as delta table.
+# MAGIC Sample data is generated to DBFS storage to simulate a production source.
+# MAGIC Modify data volume and location in `examples.sample_data_generator` as needed.
 # MAGIC In a realistic scenario this notebook would fetch data from a production system for example:
 # MAGIC - It could listen to an event topic and accumulate data in a Delta Table.
 # MAGIC - It could copy data from a transactional Database.
@@ -11,11 +13,9 @@
 
 # COMMAND ----------
 
-from datetime import date
-
-from jorvik.pipelines import etl, Input, FileOutput
-
+from jorvik.pipelines import etl, FileInput, FileOutput
 from examples.databricks.transactions.bronze.schemas import raw_customers
+from examples.sample_data_generator import generate_customers, save_csv_to_dbfs
 
 # COMMAND ----------
 
@@ -27,27 +27,20 @@ result = FileOutput(
 )
 
 # COMMAND ----------
-
-class MemoryInput(Input):
-    schema = raw_customers.schema
-
-    def extract(self):
-        return spark.createDataFrame([  # noqa: F821
-            ("1", "John Doe", "jhon.doe@mail.com", 30, "New York", date(2022, 1, 1)),
-            ("2", "Jane Doe", "jane.doe@mail.com", 25, "Los Angeles", date(2022, 1, 1)),
-            ("3", "Mike Smith", "mike.smith@mail.com", 40, "Chicago", date(2022, 1, 1)),
-            ("4", "Sara Johnson", "sara.johnson@mail.com", 35, "Houston", date(2022, 1, 1)),
-            ("5", "Tom Brown", "tom.brown@mail.com", 28, "Miami", date(2022, 1, 1)),
-        ], schema=raw_customers.schema)
-
+input = FileInput(
+    path="/tmp/sources/customers.csv",
+    format="csv",
+    schema=raw_customers.schema,
+)
 
 # COMMAND ----------
 
-@etl(inputs=MemoryInput(), outputs=result)
+@etl(inputs=input, outputs=result)
 def ingest(df):
     return df
 
 # COMMAND ----------
 
 if __name__ == "__main__":
+    save_csv_to_dbfs(generate_customers(), 'customers')
     ingest()
